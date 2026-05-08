@@ -1,6 +1,3 @@
-# Claude context (local only, no subir a GitHub)
-CLAUDE.md
-
 # Python
 __pycache__/
 *.py[cod]
@@ -17,7 +14,6 @@ ENV/
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb
 
 # Dataset (no subir imágenes de entrenamiento)
 data/
