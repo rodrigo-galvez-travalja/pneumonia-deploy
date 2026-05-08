@@ -1,0 +1,51 @@
+# Claude context (local only, no subir a GitHub)
+CLAUDE.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Dataset (no subir imágenes de entrenamiento)
+data/
+datasets/
+chest_xray/
+
+# Modelos grandes (opcional, comentar si quieres versionar los pesos)
+# models/*.pth
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+*.env
+
+# Cachés
+.cache/
+*.egg-info/
+dist/
+build/
