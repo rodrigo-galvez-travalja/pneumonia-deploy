@@ -26,6 +26,7 @@ chest_xray/
 # IDEs
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 
