@@ -10,74 +10,34 @@
   "time": { "from": "now-30m", "to": "now" },
   "panels": [
     {
-      "id": 1, "type": "row", "title": "Estado de los contenedores",
+      "id": 1, "type": "row", "title": "Resumen",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "collapsed": false
     },
     {
-      "id": 2, "type": "table", "title": "Contenedores activos",
-      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": { "color": { "mode": "thresholds" } },
-        "overrides": []
-      },
-      "options": { "showHeader": true, "footer": { "show": false } },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "expr": "container_last_seen{name!=\"\", name!~\".*POD.*\"}",
-        "instant": true, "legendFormat": "{{name}}", "refId": "A"
-      }]
-    },
-    {
-      "id": 3, "type": "row", "title": "CPU de contenedores",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
-      "collapsed": false
-    },
-    {
-      "id": 4, "type": "timeseries", "title": "CPU por contenedor (%)",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 7 },
+      "id": 2, "type": "stat", "title": "Contenedores activos",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         },
         "overrides": []
       },
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "expr": "rate(container_cpu_usage_seconds_total{name!=\"\", name!~\".*POD.*\"}[2m]) * 100",
-        "legendFormat": "{{name}}", "refId": "A"
-      }]
-    },
-    {
-      "id": 5, "type": "row", "title": "Memoria de contenedores",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
-      "collapsed": false
-    },
-    {
-      "id": 6, "type": "timeseries", "title": "Memoria por contenedor",
-      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 16 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }
-        },
-        "overrides": []
+      "options": {
+        "colorMode": "background", "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto"
       },
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [{
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "expr": "container_memory_usage_bytes{name!=\"\", name!~\".*POD.*\"}",
-        "legendFormat": "{{name}}", "refId": "A"
+        "expr": "count(container_last_seen{id=~\"/docker/[a-f0-9]{64}\"})",
+        "instant": true, "legendFormat": "Contenedores", "refId": "A"
       }]
     },
     {
-      "id": 7, "type": "stat", "title": "Memoria total contenedores",
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 16 },
+      "id": 3, "type": "stat", "title": "Memoria total en uso",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -100,18 +60,26 @@
       },
       "targets": [{
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "expr": "sum(container_memory_usage_bytes{name!=\"\", name!~\".*POD.*\"})",
-        "legendFormat": "Total", "refId": "A"
+        "expr": "sum(container_memory_usage_bytes{id=~\"/docker/[a-f0-9]{64}\"})",
+        "instant": true, "legendFormat": "Total RAM", "refId": "A"
       }]
     },
     {
-      "id": 8, "type": "stat", "title": "Num. contenedores activos",
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 20 },
+      "id": 4, "type": "stat", "title": "CPU total (%)",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
+          "unit": "percent",
           "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 80 }
+            ]
+          }
         },
         "overrides": []
       },
@@ -121,18 +89,114 @@
       },
       "targets": [{
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "expr": "count(container_last_seen{name!=\"\", name!~\".*POD.*\"})",
-        "legendFormat": "Contenedores", "refId": "A"
+        "expr": "sum(rate(container_cpu_usage_seconds_total{id=~\"/docker/[a-f0-9]{64}\"}[2m])) * 100",
+        "instant": true, "legendFormat": "CPU %", "refId": "A"
       }]
     },
     {
-      "id": 9, "type": "row", "title": "Red de contenedores",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+      "id": 5, "type": "stat", "title": "Estado cAdvisor",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background", "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto"
+      },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "up{job=\"cadvisor\"}",
+        "instant": true, "legendFormat": "cAdvisor", "refId": "A"
+      }]
+    },
+    {
+      "id": 6, "type": "row", "title": "CPU",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "collapsed": false
     },
     {
-      "id": 10, "type": "timeseries", "title": "Red por contenedor (bytes/s)",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 25 },
+      "id": 7, "type": "timeseries", "title": "CPU por contenedor (%)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "label_replace(rate(container_cpu_usage_seconds_total{id=~\"/docker/[a-f0-9]{64}\"}[2m]) * 100, \"container\", \"$1\", \"id\", \"/docker/([a-f0-9]{12}).*\")",
+        "legendFormat": "{{container}}", "refId": "A"
+      }]
+    },
+    {
+      "id": 8, "type": "row", "title": "Memoria",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "collapsed": false
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Memoria por contenedor",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "label_replace(container_memory_usage_bytes{id=~\"/docker/[a-f0-9]{64}\"}, \"container\", \"$1\", \"id\", \"/docker/([a-f0-9]{12}).*\")",
+        "legendFormat": "{{container}}", "refId": "A"
+      }]
+    },
+    {
+      "id": 10, "type": "bargauge", "title": "Memoria actual por contenedor",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "displayMode": "gradient"
+      },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "label_replace(container_memory_usage_bytes{id=~\"/docker/[a-f0-9]{64}\"}, \"container\", \"$1\", \"id\", \"/docker/([a-f0-9]{12}).*\")",
+        "instant": true, "legendFormat": "{{container}}", "refId": "A"
+      }]
+    },
+    {
+      "id": 11, "type": "row", "title": "Red",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "collapsed": false
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "Red por contenedor (bytes/s)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -145,13 +209,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(container_network_receive_bytes_total{name!=\"\", name!~\".*POD.*\"}[2m])",
-          "legendFormat": "↓ {{name}}", "refId": "A"
+          "expr": "label_replace(rate(container_network_receive_bytes_total{id=~\"/docker/[a-f0-9]{64}\"}[2m]), \"container\", \"$1\", \"id\", \"/docker/([a-f0-9]{12}).*\")",
+          "legendFormat": "↓ {{container}}", "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(container_network_transmit_bytes_total{name!=\"\", name!~\".*POD.*\"}[2m])",
-          "legendFormat": "↑ {{name}}", "refId": "B"
+          "expr": "label_replace(rate(container_network_transmit_bytes_total{id=~\"/docker/[a-f0-9]{64}\"}[2m]), \"container\", \"$1\", \"id\", \"/docker/([a-f0-9]{12}).*\")",
+          "legendFormat": "↑ {{container}}", "refId": "B"
         }
       ]
     }
