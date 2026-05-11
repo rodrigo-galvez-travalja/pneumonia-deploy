@@ -125,7 +125,7 @@
     },
     {
       "id": 7, "type": "timeseries", "title": "Predicciones por minuto",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 } },
@@ -140,7 +140,7 @@
     },
     {
       "id": 8, "type": "timeseries", "title": "Distribución por clase (por minuto)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 } },
@@ -151,6 +151,25 @@
         "datasource": { "type": "prometheus", "uid": "prometheus" },
         "expr": "rate(prediction_by_class_total[1m]) * 60",
         "legendFormat": "{{class_name}}", "refId": "A"
+      }]
+    },
+    {
+      "id": 13, "type": "piechart", "title": "Distribución total por clase",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] },
+        "pieType": "pie",
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "sum by (class_name) (prediction_by_class_total)",
+        "instant": true, "legendFormat": "{{class_name}}", "refId": "A"
       }]
     },
     {

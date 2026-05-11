@@ -1,0 +1,159 @@
+{
+  "id": null,
+  "uid": "containers-monitor",
+  "title": "Contenedores Docker",
+  "tags": ["docker", "containers"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "row", "title": "Estado de los contenedores",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "id": 2, "type": "table", "title": "Contenedores activos",
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" } },
+        "overrides": []
+      },
+      "options": { "showHeader": true, "footer": { "show": false } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "container_last_seen{name!=\"\", name!~\".*POD.*\"}",
+        "instant": true, "legendFormat": "{{name}}", "refId": "A"
+      }]
+    },
+    {
+      "id": 3, "type": "row", "title": "CPU de contenedores",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "collapsed": false
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "CPU por contenedor (%)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "rate(container_cpu_usage_seconds_total{name!=\"\", name!~\".*POD.*\"}[2m]) * 100",
+        "legendFormat": "{{name}}", "refId": "A"
+      }]
+    },
+    {
+      "id": 5, "type": "row", "title": "Memoria de contenedores",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "collapsed": false
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Memoria por contenedor",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "container_memory_usage_bytes{name!=\"\", name!~\".*POD.*\"}",
+        "legendFormat": "{{name}}", "refId": "A"
+      }]
+    },
+    {
+      "id": 7, "type": "stat", "title": "Memoria total contenedores",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1073741824 },
+              { "color": "red", "value": 2147483648 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background", "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto"
+      },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "sum(container_memory_usage_bytes{name!=\"\", name!~\".*POD.*\"})",
+        "legendFormat": "Total", "refId": "A"
+      }]
+    },
+    {
+      "id": 8, "type": "stat", "title": "Num. contenedores activos",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background", "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto"
+      },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "count(container_last_seen{name!=\"\", name!~\".*POD.*\"})",
+        "legendFormat": "Contenedores", "refId": "A"
+      }]
+    },
+    {
+      "id": 9, "type": "row", "title": "Red de contenedores",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+      "collapsed": false
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Red por contenedor (bytes/s)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 25 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(container_network_receive_bytes_total{name!=\"\", name!~\".*POD.*\"}[2m])",
+          "legendFormat": "↓ {{name}}", "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(container_network_transmit_bytes_total{name!=\"\", name!~\".*POD.*\"}[2m])",
+          "legendFormat": "↑ {{name}}", "refId": "B"
+        }
+      ]
+    }
+  ]
+}
