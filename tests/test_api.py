@@ -6,7 +6,7 @@ from PIL import Image
 
 from app.main import app
 
-
+# para la comprobacion de los tests, ejecutar: "   python -m pytest tests/ -v   "
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as c:
