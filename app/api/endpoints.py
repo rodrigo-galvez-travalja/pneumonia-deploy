@@ -81,6 +81,7 @@ def info(request: Request):
         "classes": [{"key": name, "label": CLASS_LABELS[name]} for name in CLASS_NAMES],
         "optimizer": "RMSprop",
         "version": "1.0.0",
+        "load_timestamp": wrapper.load_timestamp,
     }
 
 

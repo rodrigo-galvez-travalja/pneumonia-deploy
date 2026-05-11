@@ -7,6 +7,8 @@ inferencia y postprocesamiento. Completamente desacoplado de FastAPI.
 
 import time
 import logging
+from datetime import datetime, timezone
+
 import torch
 
 from app.model.architecture import PneumoniaCNN, CLASS_NAMES, CLASS_LABELS
@@ -33,6 +35,7 @@ class PneumoniaWrapper:
         self.model_path = model_path
         self.model = None
         self.is_loaded = False
+        self.load_timestamp: str | None = None
         self._load_model()
 
     def _load_model(self) -> None:
@@ -58,6 +61,7 @@ class PneumoniaWrapper:
             # Modo evaluación: desactiva dropout y batch norm para inferencia
             self.model.eval()
             self.is_loaded = True
+            self.load_timestamp = datetime.now(timezone.utc).isoformat()
 
             logger.info("Modelo cargado correctamente.")
 
