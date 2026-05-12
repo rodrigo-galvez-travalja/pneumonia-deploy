@@ -3,89 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagnóstico de Neumonía</title>
+    <title>Diagnóstico de Neumonía · CNN</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #0b0e18;
+            --surface:      #111827;
+            --surface-alt:  #161d2e;
+            --border:       #1f2b40;
+            --border-hover: #2d4060;
+            --text:         #e2e8f0;
+            --text-muted:   #64748b;
+            --text-soft:    #94a3b8;
+            --accent:       #3b82f6;
+            --accent-glow:  rgba(59,130,246,0.15);
+            --accent-light: #60a5fa;
+            --normal:       #22c55e;
+            --normal-bg:    rgba(34,197,94,0.08);
+            --normal-bd:    rgba(34,197,94,0.25);
+            --bacterial:    #ef4444;
+            --bacterial-bg: rgba(239,68,68,0.08);
+            --bacterial-bd: rgba(239,68,68,0.25);
+            --viral:        #f97316;
+            --viral-bg:     rgba(249,115,22,0.08);
+            --viral-bd:     rgba(249,115,22,0.25);
+            --radius:       14px;
+            --radius-sm:    8px;
+        }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0f1117;
-            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 2rem 1rem;
+            padding: 2.5rem 1rem 3rem;
+            gap: 1rem;
         }
 
-        header {
+        /* ── Header ── */
+        .site-header {
             text-align: center;
-            margin-bottom: 1.5rem;
-            max-width: 680px;
+            max-width: 640px;
             width: 100%;
-        }
-
-        header h1 {
-            font-size: 1.85rem;
-            font-weight: 700;
-            color: #63b3ed;
             margin-bottom: 0.5rem;
         }
 
-        header .subtitle {
-            color: #718096;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
+        .site-header h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4rem;
         }
 
-        .description-card {
-            background: #1a1f2e;
-            border: 1px solid #2d3748;
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-            width: 100%;
-            max-width: 680px;
-            margin-bottom: 1rem;
+        .site-header p {
+            color: var(--text-muted);
             font-size: 0.88rem;
-            color: #a0aec0;
-            line-height: 1.65;
         }
 
-        .description-card p { margin-bottom: 0.6rem; }
-        .description-card p:last-child { margin-bottom: 0; }
-
-        .classes-row {
-            display: flex;
-            gap: 0.6rem;
-            margin-top: 0.75rem;
-            flex-wrap: wrap;
+        /* ── Cards ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 640px;
         }
 
-        .class-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 99px;
-            font-size: 0.78rem;
+        .card-title {
+            font-size: 0.68rem;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
         }
 
-        .class-badge.normal    { background: rgba(72,187,120,0.15); color: #48bb78; border: 1px solid rgba(72,187,120,0.3); }
-        .class-badge.bacterial { background: rgba(245,101,101,0.15); color: #f56565; border: 1px solid rgba(245,101,101,0.3); }
-        .class-badge.viral     { background: rgba(237,137,54,0.15);  color: #ed8936; border: 1px solid rgba(237,137,54,0.3); }
-
-        /* Status bar */
+        /* ── Status bar ── */
         .status-bar {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            background: #1a1f2e;
-            border: 1px solid #2d3748;
-            border-radius: 12px;
-            padding: 0.75rem 1.25rem;
+            gap: 0.6rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.7rem 1.25rem;
             width: 100%;
-            max-width: 680px;
-            margin-bottom: 1rem;
-            font-size: 0.83rem;
-            color: #718096;
+            max-width: 640px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
         }
 
         .status-dot {
@@ -93,281 +107,327 @@
             height: 8px;
             border-radius: 50%;
             flex-shrink: 0;
-            background: #4a5568;
+            background: var(--text-muted);
+            transition: background 0.3s;
         }
 
-        .status-dot.ok  { background: #48bb78; box-shadow: 0 0 6px rgba(72,187,120,0.5); }
-        .status-dot.err { background: #f56565; }
-
-        .status-bar span { flex: 1; }
-
-        /* Endpoint links */
-        .endpoints-card {
-            background: #1a1f2e;
-            border: 1px solid #2d3748;
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-            width: 100%;
-            max-width: 680px;
-            margin-bottom: 1.25rem;
+        .status-dot.ok {
+            background: var(--normal);
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.2);
+            animation: pulse-dot 2.5s ease-in-out infinite;
         }
 
-        .endpoints-title {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #4a5568;
-            margin-bottom: 0.9rem;
+        .status-dot.err { background: var(--bacterial); }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+            50%       { box-shadow: 0 0 0 5px rgba(34,197,94,0.1); }
         }
 
-        .endpoint-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 0.6rem;
-        }
-
-        .endpoint-link {
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-            padding: 0.75rem 1rem;
-            background: #0f1117;
-            border: 1px solid #2d3748;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: border-color 0.2s, background 0.2s;
-            cursor: pointer;
-        }
-
-        .endpoint-link:hover {
-            border-color: #63b3ed;
-            background: rgba(99,179,237,0.05);
-        }
-
-        .endpoint-link .method {
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #63b3ed;
-        }
-
-        .endpoint-link .path {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #e2e8f0;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-        }
-
-        .endpoint-link .desc {
-            font-size: 0.75rem;
-            color: #718096;
-            margin-top: 0.1rem;
-        }
-
-        .endpoint-link.external .method { color: #ed8936; }
-
-        /* Predict card */
-        .card {
-            background: #1a1f2e;
-            border: 1px solid #2d3748;
-            border-radius: 12px;
-            padding: 1.5rem;
-            width: 100%;
-            max-width: 680px;
-            margin-bottom: 1.25rem;
-        }
-
-        .card-title {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #4a5568;
+        /* ── Description ── */
+        .description p {
+            font-size: 0.875rem;
+            color: var(--text-soft);
+            line-height: 1.7;
             margin-bottom: 1rem;
         }
 
+        .classes-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.3rem 0.85rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-normal    { background: var(--normal-bg);    color: var(--normal);    border: 1px solid var(--normal-bd); }
+        .badge-bacterial { background: var(--bacterial-bg); color: var(--bacterial); border: 1px solid var(--bacterial-bd); }
+        .badge-viral     { background: var(--viral-bg);     color: var(--viral);     border: 1px solid var(--viral-bd); }
+
+        /* ── Model info grid ── */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+        }
+
+        .info-item .label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .info-item .value {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        .info-skeleton {
+            height: 1rem;
+            background: var(--border);
+            border-radius: 4px;
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.5; }
+            50%       { opacity: 1; }
+        }
+
+        /* ── Drop zone ── */
         #drop-zone {
-            border: 2px dashed #4a5568;
-            border-radius: 8px;
-            padding: 2.5rem 1rem;
+            border: 2px dashed var(--border-hover);
+            border-radius: var(--radius-sm);
+            padding: 2.75rem 1rem;
             text-align: center;
             cursor: pointer;
             transition: border-color 0.2s, background 0.2s;
         }
 
         #drop-zone:hover, #drop-zone.drag-over {
-            border-color: #63b3ed;
-            background: rgba(99, 179, 237, 0.05);
+            border-color: var(--accent);
+            background: var(--accent-glow);
         }
 
-        #drop-zone svg { margin: 0 auto 1rem; display: block; opacity: 0.5; }
-        #drop-zone p { color: #718096; font-size: 0.9rem; }
-        #drop-zone strong { color: #63b3ed; }
+        #drop-zone .drop-icon {
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            background: var(--accent-glow);
+            border-radius: 50%;
+            border: 1px solid rgba(59,130,246,0.25);
+        }
+
+        #drop-zone p { color: var(--text-muted); font-size: 0.875rem; }
+        #drop-zone strong { color: var(--accent-light); font-weight: 600; }
+        #drop-zone .drop-hint { margin-top: 0.4rem; font-size: 0.78rem; color: var(--border-hover); }
+
         #file-input { display: none; }
 
+        /* ── Preview ── */
         #preview-section { display: none; text-align: center; }
 
         #preview-img {
             max-width: 100%;
-            max-height: 280px;
-            border-radius: 8px;
-            border: 1px solid #2d3748;
+            max-height: 300px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
             margin-bottom: 1rem;
+            object-fit: contain;
         }
 
-        button {
+        /* ── Buttons ── */
+        .btn-primary {
             width: 100%;
-            padding: 0.75rem;
-            background: #63b3ed;
-            color: #0f1117;
+            padding: 0.8rem;
+            background: var(--accent);
+            color: #fff;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
+            letter-spacing: 0.01em;
         }
 
-        button:hover:not(:disabled) { background: #90cdf4; }
-        button:disabled { background: #4a5568; cursor: not-allowed; }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-light);
+            transform: translateY(-1px);
+        }
 
-        #loading { display: none; text-align: center; padding: 1rem; }
+        .btn-primary:active:not(:disabled) { transform: translateY(0); }
+        .btn-primary:disabled { background: var(--border-hover); color: var(--text-muted); cursor: not-allowed; }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 0.75rem;
+            background: transparent;
+            border: 1px solid var(--border-hover);
+            color: var(--text-soft);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+            margin-top: 0.75rem;
+        }
+
+        .btn-secondary:hover { background: var(--surface-alt); border-color: var(--accent); color: var(--text); }
+
+        /* ── Loading ── */
+        #loading { display: none; text-align: center; padding: 2rem 1.5rem; }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #2d3748;
-            border-top-color: #63b3ed;
+            width: 44px;
+            height: 44px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.75s linear infinite;
             margin: 0 auto 1rem;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        #loading p { color: var(--text-muted); font-size: 0.875rem; }
+
+        /* ── Error ── */
+        #error-section {
+            display: none;
+            background: var(--bacterial-bg);
+            border: 1px solid var(--bacterial-bd);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            color: var(--bacterial);
+            font-size: 0.875rem;
+        }
+
+        /* ── Results ── */
         #results-section { display: none; }
 
-        .diagnosis-main {
+        .diagnosis-box {
             text-align: center;
-            padding: 1.25rem;
-            border-radius: 8px;
+            padding: 1.5rem;
+            border-radius: var(--radius-sm);
             margin-bottom: 1.25rem;
         }
 
-        .diagnosis-main.normal    { background: rgba(72,187,120,0.12); border: 1px solid rgba(72,187,120,0.35); }
-        .diagnosis-main.bacterial { background: rgba(245,101,101,0.12); border: 1px solid rgba(245,101,101,0.35); }
-        .diagnosis-main.viral     { background: rgba(237,137,54,0.12);  border: 1px solid rgba(237,137,54,0.35); }
+        .diagnosis-box.normal    { background: var(--normal-bg);    border: 1px solid var(--normal-bd); }
+        .diagnosis-box.bacterial { background: var(--bacterial-bg); border: 1px solid var(--bacterial-bd); }
+        .diagnosis-box.viral     { background: var(--viral-bg);     border: 1px solid var(--viral-bd); }
 
-        .diag-label {
-            font-size: 0.7rem;
+        .diag-eyebrow {
+            font-size: 0.65rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #718096;
-            margin-bottom: 0.3rem;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
         }
 
-        .diag-name       { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.2rem; }
-        .diag-confidence { font-size: 0.9rem; color: #a0aec0; }
-        .diag-time       { font-size: 0.75rem; color: #4a5568; margin-top: 0.2rem; }
-
-        .section-title {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #4a5568;
-            margin-bottom: 0.9rem;
+        .diag-name {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.25rem;
         }
 
-        .prob-list { list-style: none; }
+        .diag-confidence { font-size: 0.9rem; color: var(--text-soft); }
+        .diag-time       { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        .prob-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
 
         .prob-item {
             display: flex;
             align-items: center;
-            margin-bottom: 0.7rem;
+            gap: 0.75rem;
         }
 
         .prob-name {
-            width: 175px;
-            font-size: 0.85rem;
-            color: #a0aec0;
+            width: 160px;
+            font-size: 0.83rem;
+            color: var(--text-soft);
             flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .prob-bar-wrap {
+        .prob-track {
             flex: 1;
-            background: #2d3748;
-            border-radius: 4px;
-            height: 8px;
-            margin: 0 0.75rem;
+            background: var(--border);
+            border-radius: 99px;
+            height: 7px;
             overflow: hidden;
         }
 
-        .prob-bar {
+        .prob-fill {
             height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
+            border-radius: 99px;
+            transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
         }
 
-        .bar-normal    { background: #48bb78; }
-        .bar-bacterial { background: #f56565; }
-        .bar-viral     { background: #ed8936; }
+        .fill-normal    { background: var(--normal); }
+        .fill-bacterial { background: var(--bacterial); }
+        .fill-viral     { background: var(--viral); }
 
         .prob-pct {
-            width: 45px;
+            width: 42px;
             text-align: right;
-            font-size: 0.85rem;
+            font-size: 0.83rem;
             font-weight: 600;
+            flex-shrink: 0;
         }
 
-        #error-section {
-            display: none;
-            background: rgba(245,101,101,0.1);
-            border: 1px solid rgba(245,101,101,0.3);
-            border-radius: 8px;
-            padding: 1rem;
-            color: #fc8181;
-            font-size: 0.9rem;
+        /* ── External links ── */
+        .ext-links {
+            display: flex;
+            gap: 0.75rem;
+            width: 100%;
+            max-width: 640px;
         }
 
-        .secondary-btn {
-            background: transparent;
-            border: 1px solid #4a5568;
-            color: #a0aec0;
-            margin-top: 1rem;
+        .ext-link {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-soft);
+            font-size: 0.83rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
         }
 
-        .secondary-btn:hover:not(:disabled) { background: #2d3748; color: #e2e8f0; }
+        .ext-link:hover {
+            border-color: var(--accent);
+            color: var(--accent-light);
+            background: var(--accent-glow);
+        }
 
+        /* ── Footer ── */
         footer {
-            margin-top: 1rem;
-            font-size: 0.75rem;
-            color: #2d3748;
+            font-size: 0.72rem;
+            color: var(--border-hover);
             text-align: center;
+            margin-top: 0.5rem;
         }
     </style>
 </head>
 <body>
 
-    <header>
+    <!-- Header -->
+    <header class="site-header">
         <h1>Diagnóstico de Neumonía</h1>
-        <p class="subtitle">Clasificación de radiografías de tórax · CNN PyTorch</p>
+        <p>Clasificación de radiografías de tórax mediante red neuronal convolucional</p>
     </header>
-
-    <!-- Descripción -->
-    <div class="description-card">
-        <p>
-            Sistema de clasificación automática de radiografías de tórax basado en una red neuronal convolucional (CNN)
-            entrenada con el dataset <strong>Chest X-Ray Images (Pneumonia)</strong> de Kaggle.
-        </p>
-        <p>
-            El modelo clasifica cada imagen en una de las tres categorías siguientes:
-        </p>
-        <div class="classes-row">
-            <span class="class-badge normal">Normal</span>
-            <span class="class-badge bacterial">Neumonía Bacteriana</span>
-            <span class="class-badge viral">Neumonía Vírica</span>
-        </div>
-    </div>
 
     <!-- Estado de la API -->
     <div class="status-bar">
@@ -375,118 +435,132 @@
         <span id="status-text">Comprobando estado de la API…</span>
     </div>
 
-    <!-- Accesos a endpoints -->
-    <div class="endpoints-card">
-        <p class="endpoints-title">Endpoints disponibles</p>
-        <div class="endpoint-grid">
-            <a class="endpoint-link" href="/health" target="_blank">
-                <span class="method">GET</span>
-                <span class="path">/health</span>
-                <span class="desc">Estado del servicio y modelo</span>
-            </a>
-            <a class="endpoint-link" href="/info" target="_blank">
-                <span class="method">GET</span>
-                <span class="path">/info</span>
-                <span class="desc">Metadatos del modelo</span>
-            </a>
-            <a class="endpoint-link" href="/metrics" target="_blank">
-                <span class="method">GET</span>
-                <span class="path">/metrics</span>
-                <span class="desc">Métricas Prometheus</span>
-            </a>
-            <a class="endpoint-link" href="/api" target="_blank">
-                <span class="method">GET</span>
-                <span class="path">/api</span>
-                <span class="desc">Información general de la API</span>
-            </a>
-            <a class="endpoint-link" href="/docs" target="_blank">
-                <span class="method">GET</span>
-                <span class="path">/docs</span>
-                <span class="desc">Documentación Swagger</span>
-            </a>
-            <a class="endpoint-link external" href="http://localhost:3000" target="_blank">
-                <span class="method">GRAFANA</span>
-                <span class="path">:3000</span>
-                <span class="desc">Dashboard de métricas</span>
-            </a>
+    <!-- Descripción -->
+    <div class="card description">
+        <p class="card-title">Acerca del sistema</p>
+        <p>
+            Sistema de apoyo al diagnóstico basado en una CNN entrenada con el dataset
+            <strong>Chest X-Ray Images (Pneumonia)</strong>. Analiza radiografías de tórax
+            y clasifica cada imagen en una de las tres categorías siguientes:
+        </p>
+        <div class="classes-row">
+            <span class="badge badge-normal">Normal</span>
+            <span class="badge badge-bacterial">Neumonía Bacteriana</span>
+            <span class="badge badge-viral">Neumonía Vírica</span>
+        </div>
+    </div>
+
+    <!-- Información del modelo -->
+    <div class="card">
+        <p class="card-title">Información del modelo</p>
+        <div class="info-grid" id="info-grid">
+            <div class="info-item"><div class="label">Modelo</div><div class="info-skeleton"></div></div>
+            <div class="info-item"><div class="label">Entrada</div><div class="info-skeleton"></div></div>
+            <div class="info-item"><div class="label">Optimizador</div><div class="info-skeleton"></div></div>
+            <div class="info-item"><div class="label">Cargado a las</div><div class="info-skeleton"></div></div>
         </div>
     </div>
 
     <!-- Predictor -->
     <div class="card">
         <p class="card-title">Analizar radiografía</p>
+
         <div id="drop-zone" onclick="document.getElementById('file-input').click()">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
+            <div class="drop-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+            </div>
             <p><strong>Arrastra una radiografía</strong> o haz clic para seleccionarla</p>
-            <p style="margin-top:0.4rem;font-size:0.8rem;">JPG · JPEG · PNG &nbsp;·&nbsp; Máx. 10 MB</p>
+            <p class="drop-hint">JPG · JPEG · PNG &nbsp;·&nbsp; Máx. 10 MB</p>
         </div>
         <input type="file" id="file-input" accept="image/jpeg,image/jpg,image/png" />
 
         <div id="preview-section">
             <img id="preview-img" src="" alt="Radiografía seleccionada" />
-            <button id="predict-btn" onclick="runPrediction()">Analizar radiografía</button>
+            <button class="btn-primary" id="predict-btn" onclick="runPrediction()">Analizar radiografía</button>
         </div>
     </div>
 
+    <!-- Loading -->
     <div class="card" id="loading">
         <div class="spinner"></div>
-        <p style="text-align:center;color:#718096;">Analizando radiografía…</p>
+        <p>Analizando radiografía…</p>
     </div>
 
+    <!-- Error -->
     <div class="card" id="error-section">
         <span id="error-msg"></span>
-        <button class="secondary-btn" onclick="reset()">Intentar con otra imagen</button>
+        <button class="btn-secondary" onclick="reset()">Intentar con otra imagen</button>
     </div>
 
+    <!-- Resultados -->
     <div class="card" id="results-section">
-        <p class="section-title">Diagnóstico</p>
-        <div class="diagnosis-main" id="diagnosis-main">
-            <div class="diag-label">Resultado principal</div>
+        <p class="card-title">Diagnóstico</p>
+        <div class="diagnosis-box" id="diagnosis-box">
+            <div class="diag-eyebrow">Resultado principal</div>
             <div class="diag-name" id="diag-name"></div>
             <div class="diag-confidence" id="diag-confidence"></div>
             <div class="diag-time" id="diag-time"></div>
         </div>
-        <p class="section-title">Distribución de probabilidades</p>
+
+        <p class="card-title">Distribución de probabilidades</p>
         <ul class="prob-list" id="prob-list"></ul>
-        <button class="secondary-btn" onclick="reset()">Analizar otra imagen</button>
+
+        <button class="btn-secondary" onclick="reset()">Analizar otra imagen</button>
     </div>
 
-    <footer>Pneumonia CNN API v1.0.0 · Aplicaciones de IA II · Curso 25-26</footer>
+    <!-- Links externos -->
+    <div class="ext-links">
+        <a class="ext-link" href="/docs" target="_blank">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Documentación API
+        </a>
+        <a class="ext-link" href="http://localhost:3000" target="_blank">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Grafana · Métricas
+        </a>
+    </div>
+
+    <footer>Pneumonia CNN API v1.0.0 &nbsp;·&nbsp; Aplicaciones de IA II &nbsp;·&nbsp; Curso 24-25</footer>
 
     <script>
         const API_BASE = window.location.origin;
 
-        const CLASS_COLORS = {
-            NORMAL: 'bar-normal',
-            PNEUMONIA_BACTERIAL: 'bar-bacterial',
-            PNEUMONIA_VIRAL: 'bar-viral',
+        const CLASS_FILL = {
+            NORMAL:              'fill-normal',
+            PNEUMONIA_BACTERIAL: 'fill-bacterial',
+            PNEUMONIA_VIRAL:     'fill-viral',
         };
 
-        const CLASS_CSS = {
-            NORMAL: 'normal',
+        const CLASS_BOX = {
+            NORMAL:              'normal',
             PNEUMONIA_BACTERIAL: 'bacterial',
-            PNEUMONIA_VIRAL: 'viral',
+            PNEUMONIA_VIRAL:     'viral',
         };
 
         let selectedFile = null;
 
-        // Comprobar estado de la API al cargar
+        // ── API health ──
         async function checkHealth() {
             try {
-                const res = await fetch(`${API_BASE}/health`);
+                const res  = await fetch(`${API_BASE}/health`);
                 const data = await res.json();
-                const dot = document.getElementById('status-dot');
-                const txt = document.getElementById('status-text');
+                const dot  = document.getElementById('status-dot');
+                const txt  = document.getElementById('status-text');
                 if (data.status === 'ok' && data.model_loaded) {
-                    dot.className = 'status-dot ok';
+                    dot.className   = 'status-dot ok';
                     txt.textContent = 'API operativa · Modelo cargado';
                 } else {
-                    dot.className = 'status-dot err';
-                    txt.textContent = 'API disponible pero el modelo no está cargado';
+                    dot.className   = 'status-dot err';
+                    txt.textContent = 'API disponible pero el modelo no está listo';
                 }
             } catch {
                 document.getElementById('status-dot').className = 'status-dot err';
@@ -494,8 +568,44 @@
             }
         }
 
-        checkHealth();
+        // ── Model info ──
+        async function loadModelInfo() {
+            try {
+                const res  = await fetch(`${API_BASE}/info`);
+                const data = await res.json();
 
+                const loadedAt = data.load_timestamp
+                    ? new Date(data.load_timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                    : '—';
+
+                document.getElementById('info-grid').innerHTML = `
+                    <div class="info-item">
+                        <div class="label">Modelo</div>
+                        <div class="value">${data.model_name ?? '—'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Entrada</div>
+                        <div class="value">${data.input_size ?? '—'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Optimizador</div>
+                        <div class="value">${data.optimizer ?? '—'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Cargado a las</div>
+                        <div class="value">${loadedAt}</div>
+                    </div>
+                `;
+            } catch {
+                document.getElementById('info-grid').innerHTML =
+                    '<p style="color:var(--text-muted);font-size:0.82rem;grid-column:1/-1">No se pudieron cargar los metadatos del modelo.</p>';
+            }
+        }
+
+        checkHealth();
+        loadModelInfo();
+
+        // ── Drag & drop ──
         const dropZone = document.getElementById('drop-zone');
 
         dropZone.addEventListener('dragover', e => {
@@ -537,6 +647,7 @@
             reader.readAsDataURL(file);
         }
 
+        // ── Predict ──
         async function runPrediction() {
             if (!selectedFile) return;
 
@@ -549,11 +660,8 @@
             formData.append('file', selectedFile);
 
             try {
-                const response = await fetch(`${API_BASE}/predict`, {
-                    method: 'POST',
-                    body: formData,
-                });
-                const data = await response.json();
+                const response = await fetch(`${API_BASE}/predict`, { method: 'POST', body: formData });
+                const data     = await response.json();
                 if (!response.ok) throw new Error(data.detail || `Error ${response.status}`);
                 showResults(data);
             } catch (err) {
@@ -566,29 +674,29 @@
         function showResults(data) {
             const { prediction, label, confidence, inference_time_ms, probabilities } = data;
 
-            const diagMain = document.getElementById('diagnosis-main');
-            diagMain.className = `diagnosis-main ${CLASS_CSS[prediction] || 'normal'}`;
-            document.getElementById('diag-name').textContent = label || prediction;
-            document.getElementById('diag-confidence').textContent =
-                `Confianza: ${(confidence * 100).toFixed(1)}%`;
-            document.getElementById('diag-time').textContent =
-                `Tiempo de inferencia: ${inference_time_ms} ms`;
+            const box = document.getElementById('diagnosis-box');
+            box.className = `diagnosis-box ${CLASS_BOX[prediction] || 'normal'}`;
+            document.getElementById('diag-name').textContent       = label || prediction;
+            document.getElementById('diag-confidence').textContent = `Confianza: ${(confidence * 100).toFixed(1)}%`;
+            document.getElementById('diag-time').textContent       = `Tiempo de inferencia: ${inference_time_ms} ms`;
 
-            const probList = document.getElementById('prob-list');
-            probList.innerHTML = '';
+            const list = document.getElementById('prob-list');
+            list.innerHTML = '';
             probabilities.forEach(item => {
                 const pct = (item.probability * 100).toFixed(1);
-                const li = document.createElement('li');
+                const li  = document.createElement('li');
                 li.className = 'prob-item';
                 li.innerHTML = `
                     <span class="prob-name">${item.label || item.class}</span>
-                    <div class="prob-bar-wrap">
-                        <div class="prob-bar ${CLASS_COLORS[item.class] || 'bar-normal'}"
-                             style="width:${pct}%"></div>
+                    <div class="prob-track">
+                        <div class="prob-fill ${CLASS_FILL[item.class] || 'fill-normal'}" style="width:0%"></div>
                     </div>
                     <span class="prob-pct">${pct}%</span>
                 `;
-                probList.appendChild(li);
+                list.appendChild(li);
+                requestAnimationFrame(() => {
+                    li.querySelector('.prob-fill').style.width = `${pct}%`;
+                });
             });
 
             show('results-section');
@@ -603,7 +711,7 @@
         function reset() {
             selectedFile = null;
             document.getElementById('file-input').value = '';
-            document.getElementById('preview-img').src = '';
+            document.getElementById('preview-img').src  = '';
             ['preview-section', 'results-section', 'error-section', 'loading'].forEach(hide);
         }
 
