@@ -412,6 +412,36 @@
             background: var(--accent-glow);
         }
 
+        /* ── Verificador ── */
+        .verify-result {
+            display: none;
+            margin-top: 1.25rem;
+            padding: 0.9rem 1.1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .verify-result.correct {
+            background: var(--normal-bg);
+            border: 1px solid var(--normal-bd);
+            color: var(--normal);
+        }
+
+        .verify-result.incorrect {
+            background: var(--bacterial-bg);
+            border: 1px solid var(--bacterial-bd);
+            color: var(--bacterial);
+        }
+
+        .verify-result .vr-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .verify-result .vr-detail { color: var(--text-soft); font-size: 0.82rem; }
+
         /* ── Footer ── */
         footer {
             font-size: 0.72rem;
@@ -509,6 +539,11 @@
         <p class="card-title">Distribución de probabilidades</p>
         <ul class="prob-list" id="prob-list"></ul>
 
+        <div class="verify-result" id="verify-result">
+            <div class="vr-title" id="vr-title"></div>
+            <div class="vr-detail" id="vr-detail"></div>
+        </div>
+
         <button class="btn-secondary" onclick="reset()">Analizar otra imagen</button>
     </div>
 
@@ -546,7 +581,24 @@
             PNEUMONIA_VIRAL:     'viral',
         };
 
-        let selectedFile = null;
+        let selectedFile  = null;
+        let lastPrediction = null;
+        let trueClass      = null;
+
+        const CLASS_LABEL = {
+            NORMAL:              'Normal',
+            PNEUMONIA_BACTERIAL: 'Neumonía Bacteriana',
+            PNEUMONIA_VIRAL:     'Neumonía Vírica',
+        };
+
+        function inferTrueClass(filename) {
+            const name = filename.toLowerCase();
+            if (name.includes('bacteria'))       return 'PNEUMONIA_BACTERIAL';
+            if (name.includes('virus'))          return 'PNEUMONIA_VIRAL';
+            if (name.includes('normal'))         return 'NORMAL';
+            if (/^im-\d/.test(name))             return 'NORMAL';
+            return null;
+        }
 
         // ── API health ──
         async function checkHealth() {
@@ -637,6 +689,7 @@
                 return;
             }
             selectedFile = file;
+            trueClass    = inferTrueClass(file.name);
             const reader = new FileReader();
             reader.onload = e => {
                 document.getElementById('preview-img').src = e.target.result;
@@ -699,6 +752,24 @@
                 });
             });
 
+            lastPrediction = prediction;
+
+            const verifyBox   = document.getElementById('verify-result');
+            const verifyTitle = document.getElementById('vr-title');
+            const verifyDetail = document.getElementById('vr-detail');
+
+            if (trueClass) {
+                const correct = trueClass === prediction;
+                verifyBox.className     = `verify-result ${correct ? 'correct' : 'incorrect'}`;
+                verifyTitle.textContent = correct ? '✓ Predicción correcta' : '✗ Predicción incorrecta';
+                verifyDetail.textContent = correct
+                    ? `El modelo clasificó correctamente como ${CLASS_LABEL[trueClass]}.`
+                    : `Clase real: ${CLASS_LABEL[trueClass]} · Predicción del modelo: ${CLASS_LABEL[prediction]}`;
+                verifyBox.style.display = 'block';
+            } else {
+                verifyBox.style.display = 'none';
+            }
+
             show('results-section');
             show('preview-section');
         }
@@ -709,9 +780,12 @@
         }
 
         function reset() {
-            selectedFile = null;
-            document.getElementById('file-input').value = '';
-            document.getElementById('preview-img').src  = '';
+            selectedFile   = null;
+            lastPrediction = null;
+            trueClass      = null;
+            document.getElementById('file-input').value           = '';
+            document.getElementById('preview-img').src            = '';
+            document.getElementById('verify-result').style.display = 'none';
             ['preview-section', 'results-section', 'error-section', 'loading'].forEach(hide);
         }
 
