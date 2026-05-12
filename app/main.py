@@ -40,7 +40,7 @@ app = FastAPI(
 app.include_router(router)
 
 
-@app.get("/ui", include_in_schema=False)
+@app.get("/", include_in_schema=False)
 def frontend():
     return FileResponse(os.path.join(_FRONTEND_DIR, "index.html"))
 

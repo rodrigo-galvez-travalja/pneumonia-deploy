@@ -42,7 +42,7 @@ _ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/jpg", "image/png"}
 _MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
-@router.get("/")
+@router.get("/api")
 def root():
     return {
         "name": "Pneumonia CNN API",
@@ -53,7 +53,6 @@ def root():
             "GET /info": "Metadatos del modelo",
             "POST /predict": "Realiza una predicción sobre una imagen",
             "GET /metrics": "Métricas en formato Prometheus",
-            "GET /ui": "Interfaz web",
         },
     }
 
