@@ -15,10 +15,7 @@ ENV/
 # Jupyter
 .ipynb_checkpoints/
 
-# Dataset (no subir imágenes de entrenamiento)
-data/
-datasets/
-chest_xray/
+
 
 # Modelos grandes (opcional, comentar si quieres versionar los pesos)
 # models/*.pth
@@ -33,6 +30,7 @@ chest_xray/
 # OS
 .DS_Store
 Thumbs.db
+handoff.md
 
 # Logs
 *.log
