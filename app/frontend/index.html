@@ -1,6 +1,3 @@
-
-
-<!-- Funcional de momento para ir viendo como funciona, mejorar en la rama correspondiente -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -23,26 +20,170 @@
 
         header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            max-width: 680px;
+            width: 100%;
         }
 
         header h1 {
-            font-size: 1.75rem;
+            font-size: 1.85rem;
             font-weight: 700;
             color: #63b3ed;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.5rem;
         }
 
-        header p { color: #718096; font-size: 0.9rem; }
+        header .subtitle {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
 
+        .description-card {
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            width: 100%;
+            max-width: 680px;
+            margin-bottom: 1rem;
+            font-size: 0.88rem;
+            color: #a0aec0;
+            line-height: 1.65;
+        }
+
+        .description-card p { margin-bottom: 0.6rem; }
+        .description-card p:last-child { margin-bottom: 0; }
+
+        .classes-row {
+            display: flex;
+            gap: 0.6rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .class-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .class-badge.normal    { background: rgba(72,187,120,0.15); color: #48bb78; border: 1px solid rgba(72,187,120,0.3); }
+        .class-badge.bacterial { background: rgba(245,101,101,0.15); color: #f56565; border: 1px solid rgba(245,101,101,0.3); }
+        .class-badge.viral     { background: rgba(237,137,54,0.15);  color: #ed8936; border: 1px solid rgba(237,137,54,0.3); }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            width: 100%;
+            max-width: 680px;
+            margin-bottom: 1rem;
+            font-size: 0.83rem;
+            color: #718096;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: #4a5568;
+        }
+
+        .status-dot.ok  { background: #48bb78; box-shadow: 0 0 6px rgba(72,187,120,0.5); }
+        .status-dot.err { background: #f56565; }
+
+        .status-bar span { flex: 1; }
+
+        /* Endpoint links */
+        .endpoints-card {
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            width: 100%;
+            max-width: 680px;
+            margin-bottom: 1.25rem;
+        }
+
+        .endpoints-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #4a5568;
+            margin-bottom: 0.9rem;
+        }
+
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.6rem;
+        }
+
+        .endpoint-link {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            padding: 0.75rem 1rem;
+            background: #0f1117;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: border-color 0.2s, background 0.2s;
+            cursor: pointer;
+        }
+
+        .endpoint-link:hover {
+            border-color: #63b3ed;
+            background: rgba(99,179,237,0.05);
+        }
+
+        .endpoint-link .method {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #63b3ed;
+        }
+
+        .endpoint-link .path {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .endpoint-link .desc {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.1rem;
+        }
+
+        .endpoint-link.external .method { color: #ed8936; }
+
+        /* Predict card */
         .card {
             background: #1a1f2e;
             border: 1px solid #2d3748;
             border-radius: 12px;
             padding: 1.5rem;
             width: 100%;
-            max-width: 580px;
+            max-width: 680px;
             margin-bottom: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #4a5568;
+            margin-bottom: 1rem;
         }
 
         #drop-zone {
@@ -52,7 +193,6 @@
             text-align: center;
             cursor: pointer;
             transition: border-color 0.2s, background 0.2s;
-            
         }
 
         #drop-zone:hover, #drop-zone.drag-over {
@@ -114,9 +254,9 @@
             margin-bottom: 1.25rem;
         }
 
-        .diagnosis-main.normal   { background: rgba(72,187,120,0.12); border: 1px solid rgba(72,187,120,0.35); }
+        .diagnosis-main.normal    { background: rgba(72,187,120,0.12); border: 1px solid rgba(72,187,120,0.35); }
         .diagnosis-main.bacterial { background: rgba(245,101,101,0.12); border: 1px solid rgba(245,101,101,0.35); }
-        .diagnosis-main.viral    { background: rgba(237,137,54,0.12); border: 1px solid rgba(237,137,54,0.35); }
+        .diagnosis-main.viral     { background: rgba(237,137,54,0.12);  border: 1px solid rgba(237,137,54,0.35); }
 
         .diag-label {
             font-size: 0.7rem;
@@ -126,9 +266,9 @@
             margin-bottom: 0.3rem;
         }
 
-        .diag-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .diag-name       { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.2rem; }
         .diag-confidence { font-size: 0.9rem; color: #a0aec0; }
-        .diag-time { font-size: 0.75rem; color: #4a5568; margin-top: 0.2rem; }
+        .diag-time       { font-size: 0.75rem; color: #4a5568; margin-top: 0.2rem; }
 
         .section-title {
             font-size: 0.7rem;
@@ -197,15 +337,84 @@
         }
 
         .secondary-btn:hover:not(:disabled) { background: #2d3748; color: #e2e8f0; }
+
+        footer {
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: #2d3748;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+
     <header>
         <h1>Diagnóstico de Neumonía</h1>
-        <p>Clasificación de radiografías de tórax · CNN PyTorch</p>
+        <p class="subtitle">Clasificación de radiografías de tórax · CNN PyTorch</p>
     </header>
 
+    <!-- Descripción -->
+    <div class="description-card">
+        <p>
+            Sistema de clasificación automática de radiografías de tórax basado en una red neuronal convolucional (CNN)
+            entrenada con el dataset <strong>Chest X-Ray Images (Pneumonia)</strong> de Kaggle.
+        </p>
+        <p>
+            El modelo clasifica cada imagen en una de las tres categorías siguientes:
+        </p>
+        <div class="classes-row">
+            <span class="class-badge normal">Normal</span>
+            <span class="class-badge bacterial">Neumonía Bacteriana</span>
+            <span class="class-badge viral">Neumonía Vírica</span>
+        </div>
+    </div>
+
+    <!-- Estado de la API -->
+    <div class="status-bar">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Comprobando estado de la API…</span>
+    </div>
+
+    <!-- Accesos a endpoints -->
+    <div class="endpoints-card">
+        <p class="endpoints-title">Endpoints disponibles</p>
+        <div class="endpoint-grid">
+            <a class="endpoint-link" href="/health" target="_blank">
+                <span class="method">GET</span>
+                <span class="path">/health</span>
+                <span class="desc">Estado del servicio y modelo</span>
+            </a>
+            <a class="endpoint-link" href="/info" target="_blank">
+                <span class="method">GET</span>
+                <span class="path">/info</span>
+                <span class="desc">Metadatos del modelo</span>
+            </a>
+            <a class="endpoint-link" href="/metrics" target="_blank">
+                <span class="method">GET</span>
+                <span class="path">/metrics</span>
+                <span class="desc">Métricas Prometheus</span>
+            </a>
+            <a class="endpoint-link" href="/api" target="_blank">
+                <span class="method">GET</span>
+                <span class="path">/api</span>
+                <span class="desc">Información general de la API</span>
+            </a>
+            <a class="endpoint-link" href="/docs" target="_blank">
+                <span class="method">GET</span>
+                <span class="path">/docs</span>
+                <span class="desc">Documentación Swagger</span>
+            </a>
+            <a class="endpoint-link external" href="http://localhost:3000" target="_blank">
+                <span class="method">GRAFANA</span>
+                <span class="path">:3000</span>
+                <span class="desc">Dashboard de métricas</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Predictor -->
     <div class="card">
+        <p class="card-title">Analizar radiografía</p>
         <div id="drop-zone" onclick="document.getElementById('file-input').click()">
             <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -225,7 +434,7 @@
 
     <div class="card" id="loading">
         <div class="spinner"></div>
-        <p style="text-align:center;color:#718096;">Analizando radiografía...</p>
+        <p style="text-align:center;color:#718096;">Analizando radiografía…</p>
     </div>
 
     <div class="card" id="error-section">
@@ -246,6 +455,8 @@
         <button class="secondary-btn" onclick="reset()">Analizar otra imagen</button>
     </div>
 
+    <footer>Pneumonia CNN API v1.0.0 · Aplicaciones de IA II · Curso 24-25</footer>
+
     <script>
         const API_BASE = window.location.origin;
 
@@ -262,6 +473,28 @@
         };
 
         let selectedFile = null;
+
+        // Comprobar estado de la API al cargar
+        async function checkHealth() {
+            try {
+                const res = await fetch(`${API_BASE}/health`);
+                const data = await res.json();
+                const dot = document.getElementById('status-dot');
+                const txt = document.getElementById('status-text');
+                if (data.status === 'ok' && data.model_loaded) {
+                    dot.className = 'status-dot ok';
+                    txt.textContent = 'API operativa · Modelo cargado';
+                } else {
+                    dot.className = 'status-dot err';
+                    txt.textContent = 'API disponible pero el modelo no está cargado';
+                }
+            } catch {
+                document.getElementById('status-dot').className = 'status-dot err';
+                document.getElementById('status-text').textContent = 'No se puede conectar con la API';
+            }
+        }
+
+        checkHealth();
 
         const dropZone = document.getElementById('drop-zone');
 
