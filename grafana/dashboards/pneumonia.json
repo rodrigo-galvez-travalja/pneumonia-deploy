@@ -51,43 +51,49 @@
         "overrides": []
       },
       "options": {
-        "colorMode": "background", "graphMode": "none", "orientation": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "textMode": "auto"
       },
       "targets": [{
         "datasource": { "type": "prometheus", "uid": "prometheus" },
         "expr": "sum(prediction_errors_total) or vector(0)",
-        "instant": true, "legendFormat": "Errores", "refId": "A"
+        "legendFormat": "Errores", "refId": "A"
       }]
     },
     {
-      "id": 4, "type": "stat", "title": "Predicciones Activas",
+      "id": 4, "type": "stat", "title": "Ritmo (pred/min)",
+      "description": "Predicciones procesadas por minuto en los últimos 2 min. 'Predicciones Activas' (gauge) no es observable con scrape de 15 s e inferencias de ~20 ms.",
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
+          "decimals": 1,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 10 }
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
             ]
           }
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "background", "graphMode": "none", "orientation": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "textMode": "auto"
       },
       "targets": [{
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "expr": "active_predictions",
-        "instant": true, "legendFormat": "Activas", "refId": "A"
+        "expr": "rate(total_predictions_total[2m]) * 60",
+        "legendFormat": "pred/min", "refId": "A"
       }]
     },
     {
