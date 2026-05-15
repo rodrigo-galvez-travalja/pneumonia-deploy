@@ -3,587 +3,852 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagnóstico de Neumonía · CNN</title>
+    <title>Pneumonia AI · Diagnóstico Radiológico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+        /* ─── Tokens ─── */
         :root {
-            --bg:           #0d1829;
-            --surface:      #162035;
-            --surface-alt:  #1c2a42;
-            --border:       #243450;
-            --border-hover: #3a5070;
-            --text:         #f0f4ff;
-            --text-muted:   #7a90b0;
-            --text-soft:    #a8bcce;
-            --accent:       #38bdf8;
-            --accent-glow:  rgba(56,189,248,0.12);
-            --accent-light: #7dd3fc;
-            --normal:       #34d399;
-            --normal-bg:    rgba(52,211,153,0.10);
-            --normal-bd:    rgba(52,211,153,0.30);
-            --bacterial:    #f87171;
-            --bacterial-bg: rgba(248,113,113,0.10);
-            --bacterial-bd: rgba(248,113,113,0.30);
-            --viral:        #fb923c;
-            --viral-bg:     rgba(251,146,60,0.10);
-            --viral-bd:     rgba(251,146,60,0.30);
-            --radius:       14px;
-            --radius-sm:    8px;
+            --bg:          #09090b;
+            --surface:     #18181b;
+            --surface-2:   #1f1f23;
+            --border:      #27272a;
+            --border-2:    #3f3f46;
+            --text:        #fafafa;
+            --text-muted:  #71717a;
+            --text-soft:   #a1a1aa;
+
+            --emerald:     #10b981;
+            --emerald-bg:  rgba(16,185,129,0.08);
+            --emerald-bd:  rgba(16,185,129,0.2);
+
+            --red:         #ef4444;
+            --red-bg:      rgba(239,68,68,0.08);
+            --red-bd:      rgba(239,68,68,0.2);
+
+            --amber:       #f59e0b;
+            --amber-bg:    rgba(245,158,11,0.08);
+            --amber-bd:    rgba(245,158,11,0.2);
+
+            --cyan:        #06b6d4;
+            --cyan-bg:     rgba(6,182,212,0.08);
+            --cyan-bd:     rgba(6,182,212,0.2);
+
+            --radius:      12px;
+            --radius-sm:   8px;
+            --radius-xs:   6px;
+
+            --shadow:      0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4);
+            --shadow-md:   0 4px 12px rgba(0,0,0,0.5);
         }
 
+        /* ─── Reset ─── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 2.5rem 1rem 3rem;
+            padding: 3rem 1.25rem 4rem;
+            gap: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── Layout wrapper ─── */
+        .wrapper {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            flex-direction: column;
+            gap: 1px; /* stacked sections share borders */
+        }
+
+        /* ─── Section ─── */
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1.75rem;
+        }
+
+        .section:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+        .section:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
+        .section:only-child  { border-radius: var(--radius); }
+
+        .section + .section { border-top: none; }
+
+        /* standalone sections (outside stacked group) */
+        .section--card {
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        /* ─── Header ─── */
+        .page-header {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 2rem;
             gap: 1rem;
         }
 
-        /* ── Header ── */
-        .site-header {
-            text-align: center;
-            max-width: 640px;
-            width: 100%;
-            margin-bottom: 0.5rem;
-        }
-
-        .site-header h1 {
-            font-size: 1.9rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.4rem;
-        }
-
-        .site-header p {
-            color: var(--text-muted);
-            font-size: 0.88rem;
-        }
-
-        /* ── Cards ── */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            width: 100%;
-            max-width: 640px;
-        }
-
-        .card-title {
-            font-size: 0.68rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-        }
-
-        /* ── Status bar ── */
-        .status-bar {
+        .brand {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.75rem;
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 0.7rem 1.25rem;
-            width: 100%;
-            max-width: 640px;
-            font-size: 0.82rem;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: var(--shadow);
+        }
+
+        .brand-text h1 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: -0.01em;
+        }
+
+        .brand-text p {
+            font-size: 0.78rem;
             color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        /* ─── Status pill ─── */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            box-shadow: var(--shadow);
+            white-space: nowrap;
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
+            background: var(--border-2);
             flex-shrink: 0;
-            background: var(--text-muted);
             transition: background 0.3s;
         }
 
-        .status-dot.ok {
-            background: var(--normal);
-            box-shadow: 0 0 0 3px rgba(34,197,94,0.2);
-            animation: pulse-dot 2.5s ease-in-out infinite;
-        }
+        .status-dot.ok  { background: var(--emerald); box-shadow: 0 0 0 2px var(--emerald-bg); }
+        .status-dot.err { background: var(--red); }
 
-        .status-dot.err { background: var(--bacterial); }
-
-        @keyframes pulse-dot {
-            0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
-            50%       { box-shadow: 0 0 0 5px rgba(34,197,94,0.1); }
-        }
-
-        /* ── Description ── */
-        .description p {
-            font-size: 0.875rem;
-            color: var(--text-soft);
-            line-height: 1.7;
-            margin-bottom: 1rem;
-        }
-
-        .classes-row {
+        /* ─── Section header ─── */
+        .sec-header {
             display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
         }
 
-        .badge {
-            padding: 0.3rem 0.85rem;
-            border-radius: 99px;
-            font-size: 0.75rem;
+        .sec-title {
+            font-size: 0.8rem;
             font-weight: 600;
+            color: var(--text-soft);
+            letter-spacing: 0.01em;
         }
 
-        .badge-normal    { background: var(--normal-bg);    color: var(--normal);    border: 1px solid var(--normal-bd); }
-        .badge-bacterial { background: var(--bacterial-bg); color: var(--bacterial); border: 1px solid var(--bacterial-bd); }
-        .badge-viral     { background: var(--viral-bg);     color: var(--viral);     border: 1px solid var(--viral-bd); }
+        .sec-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 99px;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            background: var(--surface-2);
+        }
 
-        /* ── Model info grid ── */
-        .info-grid {
+        /* ─── Model metadata ─── */
+        .meta-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.75rem;
-            margin-bottom: 1rem;
         }
 
-        .info-item {
-            background: var(--surface-alt);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 0.85rem 1rem;
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
         }
 
-        .info-item .label {
-            font-size: 0.68rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+        .meta-label {
+            font-size: 0.7rem;
+            font-weight: 500;
             color: var(--text-muted);
-            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .info-item .value {
-            font-size: 0.88rem;
-            font-weight: 600;
+        .meta-value {
+            font-size: 0.85rem;
+            font-weight: 500;
             color: var(--text);
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
         }
 
-        .info-skeleton {
-            height: 1rem;
+        .meta-skeleton {
+            height: 0.85rem;
+            width: 80px;
             background: var(--border);
             border-radius: 4px;
-            animation: shimmer 1.5s ease-in-out infinite;
+            animation: pulse 1.8s ease-in-out infinite;
         }
 
-        @keyframes shimmer {
+        @keyframes pulse {
             0%, 100% { opacity: 0.5; }
             50%       { opacity: 1; }
         }
 
-        /* ── Drop zone ── */
+        /* ─── Upload zone ─── */
         #drop-zone {
-            border: 2px dashed var(--border-hover);
+            border: 1.5px dashed var(--border-2);
             border-radius: var(--radius-sm);
-            padding: 2.75rem 1rem;
+            padding: 2.5rem 1.5rem;
             text-align: center;
             cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
+            transition: border-color 0.15s, background 0.15s;
         }
 
-        #drop-zone:hover, #drop-zone.drag-over {
-            border-color: var(--accent);
-            background: var(--accent-glow);
+        #drop-zone:hover,
+        #drop-zone.drag-over {
+            border-color: var(--cyan);
+            background: var(--cyan-bg);
         }
 
-        #drop-zone .drop-icon {
-            margin: 0 auto 1rem;
+        .drop-icon-wrap {
+            width: 44px;
+            height: 44px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 52px;
-            height: 52px;
-            background: var(--accent-glow);
-            border-radius: 50%;
-            border: 1px solid rgba(59,130,246,0.25);
+            margin: 0 auto 1rem;
         }
 
-        #drop-zone p { color: var(--text-muted); font-size: 0.875rem; }
-        #drop-zone strong { color: var(--accent-light); font-weight: 600; }
-        #drop-zone .drop-hint { margin-top: 0.4rem; font-size: 0.78rem; color: var(--border-hover); }
+        #drop-zone .drop-title {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+        }
+
+        #drop-zone .drop-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
 
         #file-input { display: none; }
 
-        /* ── Preview ── */
-        #preview-section { display: none; text-align: center; }
+        /* ─── Image preview ─── */
+        #preview-section { display: none; }
+
+        .preview-wrap {
+            position: relative;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 1rem;
+            line-height: 0;
+        }
 
         #preview-img {
-            max-width: 100%;
-            max-height: 300px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            margin-bottom: 1rem;
+            width: 100%;
+            max-height: 320px;
             object-fit: contain;
+            display: block;
         }
 
-        /* ── Buttons ── */
-        .btn-primary {
-            width: 100%;
-            padding: 0.8rem;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            letter-spacing: 0.01em;
+        /* scan overlay during inference */
+        .scan-line {
+            display: none;
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
         }
 
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-light);
-            transform: translateY(-1px);
+        .scan-line.active { display: block; }
+
+        .scan-beam {
+            position: absolute;
+            left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            opacity: 0.9;
+            animation: scan 1.8s ease-in-out infinite;
         }
 
-        .btn-primary:active:not(:disabled) { transform: translateY(0); }
-        .btn-primary:disabled { background: var(--border-hover); color: var(--text-muted); cursor: not-allowed; }
+        @keyframes scan {
+            0%   { top: 0; opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
 
-        .btn-secondary {
-            width: 100%;
-            padding: 0.75rem;
-            background: transparent;
-            border: 1px solid var(--border-hover);
-            color: var(--text-soft);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
+        /* ─── Buttons ─── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: inherit;
+            font-size: 0.85rem;
             font-weight: 500;
+            border-radius: var(--radius-xs);
             cursor: pointer;
-            transition: background 0.2s, border-color 0.2s, color 0.2s;
-            margin-top: 0.75rem;
+            transition: opacity 0.15s, background 0.15s, transform 0.1s;
+            border: none;
+            padding: 0.65rem 1.1rem;
         }
 
-        .btn-secondary:hover { background: var(--surface-alt); border-color: var(--accent); color: var(--text); }
+        .btn:active { transform: scale(0.98); }
 
-        /* ── Loading ── */
-        #loading { display: none; text-align: center; padding: 2rem 1.5rem; }
+        .btn-primary {
+            background: var(--text);
+            color: var(--bg);
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) { opacity: 0.88; }
+
+        .btn-primary:disabled {
+            background: var(--surface-2);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            width: 100%;
+            margin-top: 0.6rem;
+        }
+
+        .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+
+        /* ─── Loading ─── */
+        #loading { display: none; }
+
+        .loading-inner {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
         .spinner {
-            width: 44px;
-            height: 44px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--text);
             border-radius: 50%;
-            animation: spin 0.75s linear infinite;
-            margin: 0 auto 1rem;
+            animation: spin 0.65s linear infinite;
+            flex-shrink: 0;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        #loading p { color: var(--text-muted); font-size: 0.875rem; }
-
-        /* ── Error ── */
-        #error-section {
-            display: none;
-            background: var(--bacterial-bg);
-            border: 1px solid var(--bacterial-bd);
-            border-radius: var(--radius-sm);
-            padding: 1rem 1.25rem;
-            color: var(--bacterial);
-            font-size: 0.875rem;
+        .loading-text {
+            font-size: 0.85rem;
+            color: var(--text-soft);
         }
 
-        /* ── Results ── */
-        #results-section { display: none; }
-
-        .diagnosis-box {
-            text-align: center;
-            padding: 1.5rem;
-            border-radius: var(--radius-sm);
-            margin-bottom: 1.25rem;
-        }
-
-        .diagnosis-box.normal    { background: var(--normal-bg);    border: 1px solid var(--normal-bd); }
-        .diagnosis-box.bacterial { background: var(--bacterial-bg); border: 1px solid var(--bacterial-bd); }
-        .diagnosis-box.viral     { background: var(--viral-bg);     border: 1px solid var(--viral-bd); }
-
-        .diag-eyebrow {
-            font-size: 0.65rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
+        .loading-sub {
+            font-size: 0.75rem;
             color: var(--text-muted);
-            margin-bottom: 0.4rem;
+            margin-top: 0.1rem;
         }
 
-        .diag-name {
-            font-size: 1.6rem;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-            margin-bottom: 0.25rem;
-        }
+        /* ─── Error ─── */
+        #error-section { display: none; }
 
-        .diag-confidence { font-size: 0.9rem; color: var(--text-soft); }
-        .diag-time       { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
-
-        .prob-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
-
-        .prob-item {
+        .error-wrap {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 0.75rem;
         }
 
-        .prob-name {
-            width: 160px;
-            font-size: 0.83rem;
-            color: var(--text-soft);
+        .error-icon {
+            width: 20px;
+            height: 20px;
             flex-shrink: 0;
-            white-space: nowrap;
+            margin-top: 1px;
+            color: var(--red);
+        }
+
+        .error-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+
+        #error-msg {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* ─── Result block ─── */
+        #results-section { display: none; }
+
+        .result-hero {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 1.5rem;
+        }
+
+        .result-hero.normal    { background: var(--emerald-bg); border: 1px solid var(--emerald-bd); }
+        .result-hero.bacterial { background: var(--red-bg);     border: 1px solid var(--red-bd); }
+        .result-hero.viral     { background: var(--amber-bg);   border: 1px solid var(--amber-bd); }
+
+        .result-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.3rem;
+        }
+
+        .result-hero.normal    .result-icon { background: var(--emerald-bg); }
+        .result-hero.bacterial .result-icon { background: var(--red-bg); }
+        .result-hero.viral     .result-icon { background: var(--amber-bg); }
+
+        .result-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+
+        .result-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .result-hero.normal    .result-name { color: var(--emerald); }
+        .result-hero.bacterial .result-name { color: var(--red); }
+        .result-hero.viral     .result-name { color: var(--amber); }
+
+        /* ─── Stats row ─── */
+        .stats-row {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             overflow: hidden;
-            text-overflow: ellipsis;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-cell {
+            flex: 1;
+            padding: 0.9rem 1rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .stat-cell:last-child { border-right: none; }
+
+        .stat-label {
+            font-size: 0.68rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        /* ─── Probability bars ─── */
+        .prob-section-title {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.85rem;
+        }
+
+        .prob-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .prob-item { display: flex; flex-direction: column; gap: 0.35rem; }
+
+        .prob-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .prob-name {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .prob-pct {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
         }
 
         .prob-track {
-            flex: 1;
-            background: var(--border);
+            height: 4px;
+            background: var(--surface-2);
             border-radius: 99px;
-            height: 7px;
             overflow: hidden;
         }
 
         .prob-fill {
             height: 100%;
             border-radius: 99px;
-            transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .fill-normal    { background: var(--normal); }
-        .fill-bacterial { background: var(--bacterial); }
-        .fill-viral     { background: var(--viral); }
+        .fill-normal    { background: var(--emerald); }
+        .fill-bacterial { background: var(--red); }
+        .fill-viral     { background: var(--amber); }
 
-        .prob-pct {
-            width: 42px;
-            text-align: right;
-            font-size: 0.83rem;
+        /* ─── Verify notice ─── */
+        .verify-notice {
+            display: none;
+            margin-top: 1.25rem;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-xs);
+            display: none;
+            gap: 0.6rem;
+            align-items: flex-start;
+        }
+
+        .verify-notice.correct   { background: var(--emerald-bg); border: 1px solid var(--emerald-bd); }
+        .verify-notice.incorrect { background: var(--red-bg);     border: 1px solid var(--red-bd); }
+
+        .verify-notice .vn-label {
+            font-size: 0.78rem;
             font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.15rem;
+        }
+
+        .verify-notice .vn-sub {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+        }
+
+        /* ─── Classes description ─── */
+        .classes-wrap {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.85rem;
+        }
+
+        .class-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.65rem;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            border: 1px solid;
+        }
+
+        .chip-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
             flex-shrink: 0;
         }
 
-        /* ── External links ── */
-        .ext-links {
+        .chip-normal    { color: var(--emerald); border-color: var(--emerald-bd); background: var(--emerald-bg); }
+        .chip-normal    .chip-dot { background: var(--emerald); }
+        .chip-bacterial { color: var(--red);     border-color: var(--red-bd);     background: var(--red-bg); }
+        .chip-bacterial .chip-dot { background: var(--red); }
+        .chip-viral     { color: var(--amber);   border-color: var(--amber-bd);   background: var(--amber-bg); }
+        .chip-viral     .chip-dot { background: var(--amber); }
+
+        /* ─── Footer links ─── */
+        .footer-links {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.5rem;
             width: 100%;
-            max-width: 640px;
+            max-width: 680px;
+            margin-top: 1.25rem;
         }
 
-        .ext-link {
+        .footer-link {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
+            gap: 0.4rem;
+            padding: 0.6rem;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-soft);
-            font-size: 0.83rem;
+            border-radius: var(--radius-xs);
+            color: var(--text-muted);
+            font-size: 0.75rem;
             font-weight: 500;
             text-decoration: none;
-            transition: border-color 0.2s, color 0.2s, background 0.2s;
+            transition: color 0.15s, border-color 0.15s;
+            box-shadow: var(--shadow);
         }
 
-        .ext-link:hover {
-            border-color: var(--accent);
-            color: var(--accent-light);
-            background: var(--accent-glow);
-        }
+        .footer-link:hover { color: var(--text); border-color: var(--border-2); }
 
-        /* ── Verificador ── */
-        .verify-result {
-            display: none;
-            margin-top: 1.25rem;
-            padding: 0.9rem 1.1rem;
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .verify-result.correct {
-            background: var(--normal-bg);
-            border: 1px solid var(--normal-bd);
-            color: var(--normal);
-        }
-
-        .verify-result.incorrect {
-            background: var(--bacterial-bg);
-            border: 1px solid var(--bacterial-bd);
-            color: var(--bacterial);
-        }
-
-        .verify-result .vr-title {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 0.3rem;
-        }
-
-        .verify-result .vr-detail { color: var(--text-soft); font-size: 0.82rem; }
-
-        /* ── Footer ── */
+        /* ─── Page footer ─── */
         footer {
-            font-size: 0.72rem;
-            color: var(--border-hover);
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+            color: var(--border-2);
             text-align: center;
-            margin-top: 0.5rem;
+        }
+
+        /* ─── Divider ─── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 1.5rem 0;
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <header class="site-header">
-        <h1>Diagnóstico de Neumonía</h1>
-        <p>Clasificación de radiografías de tórax mediante red neuronal convolucional</p>
-    </header>
-
-    <!-- Estado de la API -->
-    <div class="status-bar">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-text">Comprobando estado de la API…</span>
-    </div>
-
-    <!-- Descripción -->
-    <div class="card description">
-        <p class="card-title">Acerca del sistema</p>
-        <p>
-            Sistema de apoyo al diagnóstico basado en una CNN entrenada con el dataset
-            <strong>Chest X-Ray Images (Pneumonia)</strong>. Analiza radiografías de tórax
-            y clasifica cada imagen en una de las tres categorías siguientes:
-        </p>
-        <div class="classes-row">
-            <span class="badge badge-normal">Normal</span>
-            <span class="badge badge-bacterial">Neumonía Bacteriana</span>
-            <span class="badge badge-viral">Neumonía Vírica</span>
-        </div>
-    </div>
-
-    <!-- Información del modelo -->
-    <div class="card">
-        <p class="card-title">Información del modelo</p>
-        <div class="info-grid" id="info-grid">
-            <div class="info-item"><div class="label">Modelo</div><div class="info-skeleton"></div></div>
-            <div class="info-item"><div class="label">Entrada</div><div class="info-skeleton"></div></div>
-            <div class="info-item"><div class="label">Optimizador</div><div class="info-skeleton"></div></div>
-            <div class="info-item"><div class="label">Cargado a las</div><div class="info-skeleton"></div></div>
-        </div>
-    </div>
-
-    <!-- Predictor -->
-    <div class="card">
-        <p class="card-title">Analizar radiografía</p>
-
-        <div id="drop-zone" onclick="document.getElementById('file-input').click()">
-            <div class="drop-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
+    <!-- ── Page header ── -->
+    <header class="page-header">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                 </svg>
             </div>
-            <p><strong>Arrastra una radiografía</strong> o haz clic para seleccionarla</p>
-            <p class="drop-hint">JPG · JPEG · PNG &nbsp;·&nbsp; Máx. 10 MB</p>
-        </div>
-        <input type="file" id="file-input" accept="image/jpeg,image/jpg,image/png" />
-
-        <div id="preview-section">
-            <img id="preview-img" src="" alt="Radiografía seleccionada" />
-            <button class="btn-primary" id="predict-btn" onclick="runPrediction()">Analizar radiografía</button>
-        </div>
-    </div>
-
-    <!-- Loading -->
-    <div class="card" id="loading">
-        <div class="spinner"></div>
-        <p>Analizando radiografía…</p>
-    </div>
-
-    <!-- Error -->
-    <div class="card" id="error-section">
-        <span id="error-msg"></span>
-        <button class="btn-secondary" onclick="reset()">Intentar con otra imagen</button>
-    </div>
-
-    <!-- Resultados -->
-    <div class="card" id="results-section">
-        <p class="card-title">Diagnóstico</p>
-        <div class="diagnosis-box" id="diagnosis-box">
-            <div class="diag-eyebrow">Resultado principal</div>
-            <div class="diag-name" id="diag-name"></div>
-            <div class="diag-confidence" id="diag-confidence"></div>
-            <div class="diag-time" id="diag-time"></div>
+            <div class="brand-text">
+                <h1>Pneumonia AI</h1>
+                <p>Diagnóstico radiológico asistido</p>
+            </div>
         </div>
 
-        <p class="card-title">Distribución de probabilidades</p>
-        <ul class="prob-list" id="prob-list"></ul>
+        <div class="status-pill">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Conectando…</span>
+        </div>
+    </header>
 
-        <div class="verify-result" id="verify-result">
-            <div class="vr-title" id="vr-title"></div>
-            <div class="vr-detail" id="vr-detail"></div>
+    <!-- ── Main wrapper ── -->
+    <div class="wrapper">
+
+        <!-- Upload section -->
+        <div class="section">
+            <div class="sec-header">
+                <span class="sec-title">Radiografía</span>
+                <span class="sec-badge" id="file-name-badge">Sin archivo</span>
+            </div>
+
+            <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <div class="drop-icon-wrap">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#71717a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                </div>
+                <p class="drop-title">Arrastra una radiografía aquí</p>
+                <p class="drop-sub">JPG, PNG · Máximo 10 MB · <span style="color:var(--text)">Haz clic para seleccionar</span></p>
+            </div>
+            <input type="file" id="file-input" accept="image/jpeg,image/jpg,image/png">
+
+            <div id="preview-section">
+                <div class="divider"></div>
+                <div class="preview-wrap">
+                    <img id="preview-img" src="" alt="Radiografía seleccionada">
+                    <div class="scan-line" id="scan-line">
+                        <div class="scan-beam"></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="predict-btn" onclick="runPrediction()">
+                    Analizar radiografía
+                </button>
+                <button class="btn btn-ghost" onclick="reset()">Cambiar imagen</button>
+            </div>
         </div>
 
-        <button class="btn-secondary" onclick="reset()">Analizar otra imagen</button>
+        <!-- Loading -->
+        <div class="section" id="loading">
+            <div class="loading-inner">
+                <div class="spinner"></div>
+                <div>
+                    <div class="loading-text">Analizando radiografía</div>
+                    <div class="loading-sub">Ejecutando inferencia en la CNN…</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error -->
+        <div class="section" id="error-section">
+            <div class="error-wrap">
+                <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>
+                    <div class="error-title">Error en el análisis</div>
+                    <div id="error-msg"></div>
+                </div>
+            </div>
+            <button class="btn btn-ghost" onclick="reset()" style="margin-top:1rem">Intentar de nuevo</button>
+        </div>
+
+        <!-- Results -->
+        <div class="section" id="results-section">
+            <div class="sec-header">
+                <span class="sec-title">Resultado del diagnóstico</span>
+            </div>
+
+            <!-- Hero diagnosis -->
+            <div class="result-hero" id="result-hero">
+                <div class="result-icon" id="result-icon"></div>
+                <div>
+                    <div class="result-label">Clasificación principal</div>
+                    <div class="result-name" id="result-name"></div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-cell">
+                    <div class="stat-label">Confianza</div>
+                    <div class="stat-value" id="stat-confidence">—</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-label">Latencia</div>
+                    <div class="stat-value" id="stat-latency">—</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-label">Modelo</div>
+                    <div class="stat-value" id="stat-model">CNN</div>
+                </div>
+            </div>
+
+            <!-- Probability distribution -->
+            <div class="prob-section-title">Distribución de probabilidades</div>
+            <ul class="prob-list" id="prob-list"></ul>
+
+            <!-- Verify -->
+            <div class="verify-notice" id="verify-notice">
+                <div>
+                    <div class="vn-label" id="vn-label"></div>
+                    <div class="vn-sub" id="vn-sub"></div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <button class="btn btn-ghost" onclick="reset()">Analizar otra radiografía</button>
+        </div>
+
+        <!-- Model info + about -->
+        <div class="section">
+            <div class="sec-header">
+                <span class="sec-title">Modelo</span>
+            </div>
+            <div class="meta-grid" id="info-grid">
+                <div class="meta-item"><div class="meta-label">Nombre</div><div class="meta-skeleton"></div></div>
+                <div class="meta-item"><div class="meta-label">Entrada</div><div class="meta-skeleton"></div></div>
+                <div class="meta-item"><div class="meta-label">Optimizador</div><div class="meta-skeleton"></div></div>
+                <div class="meta-item"><div class="meta-label">Cargado</div><div class="meta-skeleton"></div></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.65;margin-bottom:0.75rem;">
+                CNN entrenada con el dataset <span style="color:var(--text-soft)">Chest X-Ray Images (Pneumonia)</span> para clasificar radiografías de tórax en tres categorías.
+            </div>
+            <div class="classes-wrap">
+                <span class="class-chip chip-normal"><span class="chip-dot"></span>Normal</span>
+                <span class="class-chip chip-bacterial"><span class="chip-dot"></span>Neumonía Bacteriana</span>
+                <span class="class-chip chip-viral"><span class="chip-dot"></span>Neumonía Vírica</span>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Links externos -->
-    <div class="ext-links">
-        <a class="ext-link" href="/docs" target="_blank">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- ── Footer links ── -->
+    <div class="footer-links">
+        <a class="footer-link" href="/docs" target="_blank">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
             </svg>
-            Documentación API
+            API Docs
         </a>
-        <a class="ext-link" href="http://localhost:3000" target="_blank">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <a class="footer-link" href="http://localhost:3000" target="_blank">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
             </svg>
-            Grafana · Métricas
+            Grafana
+        </a>
+        <a class="footer-link" href="http://localhost:9090" target="_blank">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Prometheus
         </a>
     </div>
 
-    <footer>Pneumonia CNN API v1.0.0 &nbsp;·&nbsp; Aplicaciones de IA II &nbsp;·&nbsp; Curso 25-26</footer>
+    <footer>Pneumonia CNN · Aplicaciones de IA II · Curso 25-26</footer>
 
     <script>
         const API_BASE = window.location.origin;
 
-        const CLASS_FILL = {
-            NORMAL:              'fill-normal',
-            PNEUMONIA_BACTERIAL: 'fill-bacterial',
-            PNEUMONIA_VIRAL:     'fill-viral',
-        };
-
-        const CLASS_BOX = {
+        const CLASS_KEY = {
             NORMAL:              'normal',
             PNEUMONIA_BACTERIAL: 'bacterial',
             PNEUMONIA_VIRAL:     'viral',
         };
-
-        let selectedFile  = null;
-        let lastPrediction = null;
-        let trueClass      = null;
 
         const CLASS_LABEL = {
             NORMAL:              'Normal',
@@ -591,16 +856,22 @@
             PNEUMONIA_VIRAL:     'Neumonía Vírica',
         };
 
-        function inferTrueClass(filename) {
-            const name = filename.toLowerCase();
-            if (name.includes('bacteria'))       return 'PNEUMONIA_BACTERIAL';
-            if (name.includes('virus'))          return 'PNEUMONIA_VIRAL';
-            if (name.includes('normal'))         return 'NORMAL';
-            if (/^im-\d/.test(name))             return 'NORMAL';
-            return null;
-        }
+        const CLASS_ICON = {
+            NORMAL:              '✓',
+            PNEUMONIA_BACTERIAL: '⚠',
+            PNEUMONIA_VIRAL:     '⚠',
+        };
 
-        // ── API health ──
+        const CLASS_FILL = {
+            NORMAL:              'fill-normal',
+            PNEUMONIA_BACTERIAL: 'fill-bacterial',
+            PNEUMONIA_VIRAL:     'fill-viral',
+        };
+
+        let selectedFile = null;
+        let trueClass    = null;
+
+        // ── Health check ──
         async function checkHealth() {
             try {
                 const res  = await fetch(`${API_BASE}/health`);
@@ -609,14 +880,14 @@
                 const txt  = document.getElementById('status-text');
                 if (data.status === 'ok' && data.model_loaded) {
                     dot.className   = 'status-dot ok';
-                    txt.textContent = 'API operativa · Modelo cargado';
+                    txt.textContent = 'Sistema operativo';
                 } else {
                     dot.className   = 'status-dot err';
-                    txt.textContent = 'API disponible pero el modelo no está listo';
+                    txt.textContent = 'Modelo no disponible';
                 }
             } catch {
                 document.getElementById('status-dot').className = 'status-dot err';
-                document.getElementById('status-text').textContent = 'No se puede conectar con la API';
+                document.getElementById('status-text').textContent = 'Sin conexión';
             }
         }
 
@@ -630,43 +901,41 @@
                     ? new Date(data.load_timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
                     : '—';
 
+                document.getElementById('stat-model').textContent = data.model_name ?? 'CNN';
+
                 document.getElementById('info-grid').innerHTML = `
-                    <div class="info-item">
-                        <div class="label">Modelo</div>
-                        <div class="value">${data.model_name ?? '—'}</div>
+                    <div class="meta-item">
+                        <div class="meta-label">Nombre</div>
+                        <div class="meta-value">${data.model_name ?? '—'}</div>
                     </div>
-                    <div class="info-item">
-                        <div class="label">Entrada</div>
-                        <div class="value">${data.input_size ?? '—'}</div>
+                    <div class="meta-item">
+                        <div class="meta-label">Entrada</div>
+                        <div class="meta-value">${data.input_size ?? '—'}</div>
                     </div>
-                    <div class="info-item">
-                        <div class="label">Optimizador</div>
-                        <div class="value">${data.optimizer ?? '—'}</div>
+                    <div class="meta-item">
+                        <div class="meta-label">Optimizador</div>
+                        <div class="meta-value">${data.optimizer ?? '—'}</div>
                     </div>
-                    <div class="info-item">
-                        <div class="label">Cargado a las</div>
-                        <div class="value">${loadedAt}</div>
+                    <div class="meta-item">
+                        <div class="meta-label">Cargado</div>
+                        <div class="meta-value">${loadedAt}</div>
                     </div>
                 `;
             } catch {
                 document.getElementById('info-grid').innerHTML =
-                    '<p style="color:var(--text-muted);font-size:0.82rem;grid-column:1/-1">No se pudieron cargar los metadatos del modelo.</p>';
+                    '<p style="font-size:0.78rem;color:var(--text-muted);grid-column:1/-1">No se pudieron cargar los metadatos.</p>';
             }
         }
 
         checkHealth();
         loadModelInfo();
+        setInterval(checkHealth, 30000);
 
-        // ── Drag & drop ──
+        // ── File handling ──
         const dropZone = document.getElementById('drop-zone');
 
-        dropZone.addEventListener('dragover', e => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-
         dropZone.addEventListener('drop', e => {
             e.preventDefault();
             dropZone.classList.remove('drag-over');
@@ -675,9 +944,17 @@
         });
 
         document.getElementById('file-input').addEventListener('change', e => {
-            const file = e.target.files[0];
-            if (file) handleFile(file);
+            if (e.target.files[0]) handleFile(e.target.files[0]);
         });
+
+        function inferTrueClass(name) {
+            name = name.toLowerCase();
+            if (name.includes('bacteria')) return 'PNEUMONIA_BACTERIAL';
+            if (name.includes('virus'))    return 'PNEUMONIA_VIRAL';
+            if (name.includes('normal'))   return 'NORMAL';
+            if (/^im-\d/.test(name))       return 'NORMAL';
+            return null;
+        }
 
         function handleFile(file) {
             if (!file.type.match(/^image\/(jpeg|jpg|png)$/i)) {
@@ -685,54 +962,79 @@
                 return;
             }
             if (file.size > 10 * 1024 * 1024) {
-                showError('El archivo supera el límite de 10 MB.');
+                showError('El archivo supera 10 MB.');
                 return;
             }
+
             selectedFile = file;
             trueClass    = inferTrueClass(file.name);
+
+            document.getElementById('file-name-badge').textContent = file.name.length > 24
+                ? file.name.slice(0, 22) + '…'
+                : file.name;
+
             const reader = new FileReader();
             reader.onload = e => {
                 document.getElementById('preview-img').src = e.target.result;
                 show('preview-section');
                 hide('results-section');
                 hide('error-section');
+                stopScan();
             };
             reader.readAsDataURL(file);
+        }
+
+        // ── Scan animation ──
+        function startScan() {
+            document.getElementById('scan-line').classList.add('active');
+        }
+
+        function stopScan() {
+            document.getElementById('scan-line').classList.remove('active');
         }
 
         // ── Predict ──
         async function runPrediction() {
             if (!selectedFile) return;
 
-            hide('preview-section');
+            startScan();
+            document.getElementById('predict-btn').disabled = true;
             hide('results-section');
             hide('error-section');
             show('loading');
 
-            const formData = new FormData();
-            formData.append('file', selectedFile);
+            const form = new FormData();
+            form.append('file', selectedFile);
 
             try {
-                const response = await fetch(`${API_BASE}/predict`, { method: 'POST', body: formData });
-                const data     = await response.json();
-                if (!response.ok) throw new Error(data.detail || `Error ${response.status}`);
+                const res  = await fetch(`${API_BASE}/predict`, { method: 'POST', body: form });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || `Error ${res.status}`);
                 showResults(data);
             } catch (err) {
                 showError(err.message || 'Error de conexión con la API.');
             } finally {
                 hide('loading');
+                stopScan();
+                document.getElementById('predict-btn').disabled = false;
             }
         }
 
         function showResults(data) {
             const { prediction, label, confidence, inference_time_ms, probabilities } = data;
+            const key = CLASS_KEY[prediction] || 'normal';
 
-            const box = document.getElementById('diagnosis-box');
-            box.className = `diagnosis-box ${CLASS_BOX[prediction] || 'normal'}`;
-            document.getElementById('diag-name').textContent       = label || prediction;
-            document.getElementById('diag-confidence').textContent = `Confianza: ${(confidence * 100).toFixed(1)}%`;
-            document.getElementById('diag-time').textContent       = `Tiempo de inferencia: ${inference_time_ms} ms`;
+            // Hero
+            const hero = document.getElementById('result-hero');
+            hero.className = `result-hero ${key}`;
+            document.getElementById('result-icon').textContent  = CLASS_ICON[prediction] || '?';
+            document.getElementById('result-name').textContent  = label || CLASS_LABEL[prediction] || prediction;
 
+            // Stats
+            document.getElementById('stat-confidence').textContent = `${(confidence * 100).toFixed(1)}%`;
+            document.getElementById('stat-latency').textContent    = `${inference_time_ms} ms`;
+
+            // Prob bars
             const list = document.getElementById('prob-list');
             list.innerHTML = '';
             probabilities.forEach(item => {
@@ -740,11 +1042,13 @@
                 const li  = document.createElement('li');
                 li.className = 'prob-item';
                 li.innerHTML = `
-                    <span class="prob-name">${item.label || item.class}</span>
+                    <div class="prob-row">
+                        <span class="prob-name">${item.label || CLASS_LABEL[item.class] || item.class}</span>
+                        <span class="prob-pct">${pct}%</span>
+                    </div>
                     <div class="prob-track">
                         <div class="prob-fill ${CLASS_FILL[item.class] || 'fill-normal'}" style="width:0%"></div>
                     </div>
-                    <span class="prob-pct">${pct}%</span>
                 `;
                 list.appendChild(li);
                 requestAnimationFrame(() => {
@@ -752,26 +1056,21 @@
                 });
             });
 
-            lastPrediction = prediction;
-
-            const verifyBox   = document.getElementById('verify-result');
-            const verifyTitle = document.getElementById('vr-title');
-            const verifyDetail = document.getElementById('vr-detail');
-
+            // Verify
+            const notice = document.getElementById('verify-notice');
             if (trueClass) {
-                const correct = trueClass === prediction;
-                verifyBox.className     = `verify-result ${correct ? 'correct' : 'incorrect'}`;
-                verifyTitle.textContent = correct ? '✓ Predicción correcta' : '✗ Predicción incorrecta';
-                verifyDetail.textContent = correct
+                const ok = trueClass === prediction;
+                notice.className  = `verify-notice ${ok ? 'correct' : 'incorrect'}`;
+                notice.style.display = 'flex';
+                document.getElementById('vn-label').textContent = ok ? 'Predicción correcta' : 'Predicción incorrecta';
+                document.getElementById('vn-sub').textContent   = ok
                     ? `El modelo clasificó correctamente como ${CLASS_LABEL[trueClass]}.`
-                    : `Clase real: ${CLASS_LABEL[trueClass]} · Predicción del modelo: ${CLASS_LABEL[prediction]}`;
-                verifyBox.style.display = 'block';
+                    : `Clase real: ${CLASS_LABEL[trueClass]} · Predicho: ${CLASS_LABEL[prediction]}`;
             } else {
-                verifyBox.style.display = 'none';
+                notice.style.display = 'none';
             }
 
             show('results-section');
-            show('preview-section');
         }
 
         function showError(msg) {
@@ -780,12 +1079,13 @@
         }
 
         function reset() {
-            selectedFile   = null;
-            lastPrediction = null;
-            trueClass      = null;
-            document.getElementById('file-input').value           = '';
-            document.getElementById('preview-img').src            = '';
-            document.getElementById('verify-result').style.display = 'none';
+            selectedFile = null;
+            trueClass    = null;
+            document.getElementById('file-input').value   = '';
+            document.getElementById('preview-img').src    = '';
+            document.getElementById('file-name-badge').textContent = 'Sin archivo';
+            document.getElementById('verify-notice').style.display = 'none';
+            stopScan();
             ['preview-section', 'results-section', 'error-section', 'loading'].forEach(hide);
         }
 
