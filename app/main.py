@@ -14,6 +14,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 MODEL_PATH = os.getenv("MODEL_PATH", "models/model.pth")
+TEST_IMAGES_PATH = os.getenv("TEST_IMAGES_PATH", "")
 _FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "frontend")
 
 
@@ -47,3 +48,7 @@ def frontend():
 
 if os.path.isdir(_FRONTEND_DIR):
     app.mount("/static", StaticFiles(directory=_FRONTEND_DIR), name="static")
+
+if TEST_IMAGES_PATH and os.path.isdir(TEST_IMAGES_PATH):
+    app.mount("/test-static", StaticFiles(directory=TEST_IMAGES_PATH), name="test-static")
+    logger.info(f"Galería de test montada desde: {TEST_IMAGES_PATH}")

@@ -739,6 +739,199 @@
             font-size: 0.72rem;
             color: var(--text-3);
         }
+
+        /* ── Gallery ────────────────────────────────────────────────────── */
+        .gallery-section {
+            margin-top: 1.5rem;
+        }
+
+        .gallery-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border: none;
+            border-radius: var(--r-lg);
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            color: var(--text);
+            font-family: inherit;
+            transition: background 0.15s;
+        }
+
+        .gallery-toggle:hover { background: var(--surface-2); }
+
+        .gallery-toggle-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .gallery-toggle-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .gallery-toggle-sub {
+            font-size: 0.75rem;
+            color: var(--text-3);
+            margin-top: 1px;
+        }
+
+        .gallery-counts {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .gallery-count-badge {
+            font-size: 0.68rem;
+            font-weight: 500;
+            padding: 0.2rem 0.55rem;
+            border-radius: 99px;
+            border: 1px solid;
+        }
+
+        .gcb-normal    { color: var(--emerald); border-color: var(--emerald-bd); background: var(--emerald-bg); }
+        .gcb-bacterial { color: var(--red);     border-color: var(--red-bd);     background: var(--red-bg); }
+        .gcb-viral     { color: var(--amber);   border-color: var(--amber-bd);   background: var(--amber-bg); }
+
+        .gallery-chevron {
+            transition: transform 0.2s;
+            color: var(--text-3);
+            flex-shrink: 0;
+        }
+
+        .gallery-chevron.open { transform: rotate(180deg); }
+
+        .gallery-body {
+            display: none;
+            background: var(--surface);
+            border-radius: 0 0 var(--r-lg) var(--r-lg);
+            box-shadow: var(--card-shadow);
+            border-top: 1px solid var(--border);
+            margin-top: -4px;
+            overflow: hidden;
+        }
+
+        .gallery-body.open { display: block; }
+
+        /* Filter bar */
+        .gallery-filters {
+            display: flex;
+            gap: 0.4rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .gallery-filter-label {
+            font-size: 0.7rem;
+            color: var(--text-3);
+            font-weight: 500;
+            margin-right: 0.25rem;
+        }
+
+        .filter-btn {
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 500;
+            padding: 0.3rem 0.75rem;
+            border-radius: 99px;
+            border: 1px solid var(--border-2);
+            background: transparent;
+            color: var(--text-2);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+
+        .filter-btn:hover { color: var(--text); border-color: rgba(148,163,184,0.3); }
+
+        .filter-btn.active-all       { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
+        .filter-btn.active-normal    { background: var(--emerald-bg); color: var(--emerald); border-color: var(--emerald-bd); }
+        .filter-btn.active-bacterial { background: var(--red-bg);     color: var(--red);     border-color: var(--red-bd); }
+        .filter-btn.active-viral     { background: var(--amber-bg);   color: var(--amber);   border-color: var(--amber-bd); }
+
+        /* Image grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 3px;
+            padding: 1rem 1.5rem;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .gallery-grid::-webkit-scrollbar { width: 4px; }
+        .gallery-grid::-webkit-scrollbar-track { background: transparent; }
+        .gallery-grid::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+        .gallery-thumb {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: var(--r-sm);
+            overflow: hidden;
+            cursor: pointer;
+            background: #000;
+            border: 1.5px solid transparent;
+            transition: border-color 0.15s, transform 0.1s;
+        }
+
+        .gallery-thumb:hover {
+            border-color: var(--cyan);
+            transform: scale(1.03);
+            z-index: 1;
+        }
+
+        .gallery-thumb.cls-normal    { border-color: var(--emerald-bd); }
+        .gallery-thumb.cls-bacterial { border-color: var(--red-bd); }
+        .gallery-thumb.cls-viral     { border-color: var(--amber-bd); }
+
+        .gallery-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .gallery-thumb img.loaded { opacity: 1; }
+
+        .gallery-thumb .thumb-label {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.75));
+            padding: 0.5rem 0.3rem 0.2rem;
+            font-size: 0.52rem;
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .gallery-thumb:hover .thumb-label { opacity: 1; }
+
+        .gallery-loading {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-3);
+            font-size: 0.8rem;
+        }
+
+        .gallery-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-3);
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -915,6 +1108,47 @@
             </div>
 
         </div>
+    </div>
+
+    <!-- ── Gallery ── -->
+    <div class="gallery-section">
+
+        <button class="gallery-toggle" onclick="toggleGallery()" id="gallery-toggle">
+            <div class="gallery-toggle-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                </svg>
+                <div>
+                    <div class="gallery-toggle-title">Galería de imágenes de test</div>
+                    <div class="gallery-toggle-sub">Selecciona una radiografía del dataset para analizarla</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+                <div class="gallery-counts" id="gallery-counts" style="display:none">
+                    <span class="gallery-count-badge gcb-normal"   id="count-normal">—</span>
+                    <span class="gallery-count-badge gcb-bacterial" id="count-bacterial">—</span>
+                    <span class="gallery-count-badge gcb-viral"    id="count-viral">—</span>
+                </div>
+                <svg class="gallery-chevron" id="gallery-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+        </button>
+
+        <div class="gallery-body" id="gallery-body">
+            <div class="gallery-filters">
+                <span class="gallery-filter-label">Filtrar:</span>
+                <button class="filter-btn active-all" onclick="filterGallery('all',   this)">Todas</button>
+                <button class="filter-btn"            onclick="filterGallery('NORMAL',              this)">Normal</button>
+                <button class="filter-btn"            onclick="filterGallery('PNEUMONIA_BACTERIAL', this)">Bacteriana</button>
+                <button class="filter-btn"            onclick="filterGallery('PNEUMONIA_VIRAL',     this)">Vírica</button>
+            </div>
+            <div class="gallery-grid" id="gallery-grid">
+                <div class="gallery-loading">Cargando imágenes…</div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ── Footer ── -->
@@ -1177,6 +1411,110 @@
 
     function show(id) { document.getElementById(id).style.display = 'block'; }
     function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+    // ── Gallery ──────────────────────────────────────────────────────────
+    let galleryOpen   = false;
+    let galleryLoaded = false;
+    let allImages     = [];
+    let activeFilter  = 'all';
+
+    const CLASS_CLS = {
+        NORMAL:              'cls-normal',
+        PNEUMONIA_BACTERIAL: 'cls-bacterial',
+        PNEUMONIA_VIRAL:     'cls-viral',
+    };
+
+    function toggleGallery() {
+        galleryOpen = !galleryOpen;
+        const body    = document.getElementById('gallery-body');
+        const chevron = document.getElementById('gallery-chevron');
+        const toggle  = document.getElementById('gallery-toggle');
+        body.classList.toggle('open', galleryOpen);
+        chevron.classList.toggle('open', galleryOpen);
+        toggle.style.borderRadius = galleryOpen
+            ? 'var(--r-lg) var(--r-lg) 0 0'
+            : 'var(--r-lg)';
+
+        if (galleryOpen && !galleryLoaded) loadGallery();
+    }
+
+    async function loadGallery() {
+        try {
+            const res  = await fetch(`${API_BASE}/test-images`);
+            if (!res.ok) throw new Error('No disponible');
+            const data = await res.json();
+
+            allImages = data.images;
+
+            // Update count badges
+            const bc = data.by_class;
+            document.getElementById('count-normal').textContent    = `${bc.NORMAL ?? 0} Normal`;
+            document.getElementById('count-bacterial').textContent = `${bc.PNEUMONIA_BACTERIAL ?? 0} Bact.`;
+            document.getElementById('count-viral').textContent     = `${bc.PNEUMONIA_VIRAL ?? 0} Viral`;
+            document.getElementById('gallery-counts').style.display = 'flex';
+
+            galleryLoaded = true;
+            renderGallery('all');
+        } catch {
+            document.getElementById('gallery-grid').innerHTML =
+                '<div class="gallery-empty">Galería no disponible. Verifica que el stack está levantado con el volumen de test montado.</div>';
+        }
+    }
+
+    function filterGallery(cls, btn) {
+        activeFilter = cls;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.className = 'filter-btn';
+        });
+        const map = { all: 'active-all', NORMAL: 'active-normal', PNEUMONIA_BACTERIAL: 'active-bacterial', PNEUMONIA_VIRAL: 'active-viral' };
+        btn.classList.add(map[cls] || 'active-all');
+        if (galleryLoaded) renderGallery(cls);
+    }
+
+    function renderGallery(cls) {
+        const filtered = cls === 'all' ? allImages : allImages.filter(img => img.class === cls);
+        const grid     = document.getElementById('gallery-grid');
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="gallery-empty">No hay imágenes para este filtro.</div>';
+            return;
+        }
+
+        grid.innerHTML = '';
+        filtered.forEach(img => {
+            const div      = document.createElement('div');
+            div.className  = `gallery-thumb ${CLASS_CLS[img.class] || ''}`;
+            div.title      = `${img.label} · ${img.filename}`;
+            div.onclick    = () => loadFromGallery(img);
+
+            const image       = document.createElement('img');
+            image.loading     = 'lazy';
+            image.src         = img.url;
+            image.alt         = img.filename;
+            image.onload      = () => image.classList.add('loaded');
+
+            const label       = document.createElement('div');
+            label.className   = 'thumb-label';
+            label.textContent = img.filename;
+
+            div.appendChild(image);
+            div.appendChild(label);
+            grid.appendChild(div);
+        });
+    }
+
+    async function loadFromGallery(img) {
+        try {
+            const res  = await fetch(img.url);
+            const blob = await res.blob();
+            const file = new File([blob], img.filename, { type: blob.type || 'image/jpeg' });
+            handleFile(file);
+            // Scroll to top smoothly so the user sees the predictor
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch {
+            showError('No se pudo cargar la imagen de la galería.');
+        }
+    }
 </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
@@ -133,3 +134,53 @@ async def predict(request: Request, file: UploadFile = File(...)):
 @router.get("/metrics")
 def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+_IMAGE_EXTS = {".jpeg", ".jpg", ".png"}
+
+
+@router.get("/test-images")
+def list_test_images():
+    from app.model.architecture import CLASS_LABELS
+
+    test_path = os.getenv("TEST_IMAGES_PATH", "")
+    if not test_path or not os.path.isdir(test_path):
+        raise HTTPException(status_code=404, detail="Carpeta de test no disponible.")
+
+    images = []
+
+    normal_dir = os.path.join(test_path, "NORMAL")
+    if os.path.isdir(normal_dir):
+        for fname in sorted(os.listdir(normal_dir)):
+            if os.path.splitext(fname)[1].lower() in _IMAGE_EXTS:
+                images.append({
+                    "filename": fname,
+                    "class": "NORMAL",
+                    "label": CLASS_LABELS["NORMAL"],
+                    "url": f"/test-static/NORMAL/{fname}",
+                })
+
+    pneumonia_dir = os.path.join(test_path, "PNEUMONIA")
+    if os.path.isdir(pneumonia_dir):
+        for fname in sorted(os.listdir(pneumonia_dir)):
+            if os.path.splitext(fname)[1].lower() not in _IMAGE_EXTS:
+                continue
+            name_lower = fname.lower()
+            if "bacteria" in name_lower:
+                cls = "PNEUMONIA_BACTERIAL"
+            elif "virus" in name_lower:
+                cls = "PNEUMONIA_VIRAL"
+            else:
+                continue
+            images.append({
+                "filename": fname,
+                "class": cls,
+                "label": CLASS_LABELS[cls],
+                "url": f"/test-static/PNEUMONIA/{fname}",
+            })
+
+    by_class = {}
+    for img in images:
+        by_class[img["class"]] = by_class.get(img["class"], 0) + 1
+
+    return {"images": images, "total": len(images), "by_class": by_class}

@@ -5,6 +5,9 @@ services:
       - "8000:8000"
     environment:
       - MODEL_PATH=models/model.pth
+      - TEST_IMAGES_PATH=/data/test
+    volumes:
+      - /Users/rodrigo/.cache/kagglehub/datasets/paultimothymooney/chest-xray-pneumonia/versions/2/chest_xray/test:/data/test:ro
     restart: unless-stopped
 
   prometheus:
