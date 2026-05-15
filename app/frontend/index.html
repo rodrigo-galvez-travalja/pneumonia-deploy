@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia AI · Diagnóstico Radiológico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ── Tokens ─────────────────────────────────────────────────────── */
+        :root {
+            /* Slate-navy base — dark con personalidad azul, no negro puro */
+            --bg:        #0d1526;
+            --surface:   #152035;
+            --surface-2: #1c2d45;
+
+            /* Cards flotan con shadow + tinte azul */
+            --card-shadow:
+                0 0 0 1px rgba(148,163,184,0.1),
+                0 4px 20px rgba(0,0,0,0.5);
+
+            --border:    rgba(148,163,184,0.1);
+            --border-2:  rgba(148,163,184,0.18);
+
+            --text:      #e2e8f0;   /* slate-200 */
+            --text-2:    #94a3b8;   /* slate-400 */
+            --text-3:    #475569;   /* slate-600 */
+
+            /* Acento principal: sky-blue médico */
+            --sky:       #38bdf8;
+            --sky-bg:    rgba(56,189,248,0.08);
+            --sky-bd:    rgba(56,189,248,0.22);
+            --sky-glow:  rgba(56,189,248,0.15);
+
+            /* Estados diagnósticos */
+            --emerald:    #34d399;
+            --emerald-bg: rgba(52,211,153,0.09);
+            --emerald-bd: rgba(52,211,153,0.22);
+
+            --red:       #f87171;
+            --red-bg:    rgba(248,113,113,0.09);
+            --red-bd:    rgba(248,113,113,0.22);
+
+            --amber:     #fbbf24;
+            --amber-bg:  rgba(251,191,36,0.09);
+            --amber-bd:  rgba(251,191,36,0.22);
+
+            /* Alias para compatibilidad con CSS interior */
+            --cyan:    #38bdf8;
+            --cyan-bg: rgba(56,189,248,0.08);
+
+            --r-lg: 16px;
+            --r-md: 10px;
+            --r-sm:  6px;
+        }
+
+        /* ── Reset ──────────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            /* gradiente radial slate-navy: más rico en la parte superior */
+            background: radial-gradient(ellipse 80% 50% at 50% -10%, #1a3a5c 0%, #0d1526 60%);
+            background-color: #0d1526;
+            background-attachment: fixed;
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ── Page shell ─────────────────────────────────────────────────── */
+        .page {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* ── Header ─────────────────────────────────────────────────────── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2.5rem;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0d2445 100%);
+            border: 1px solid var(--sky-bd);
+            border-radius: var(--r-sm);
+            box-shadow: 0 0 0 1px var(--sky-bd), 0 2px 8px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .brand-desc {
+            font-size: 0.74rem;
+            color: var(--text-2);
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+        /* ── Status pill ─────────────────────────────────────────────────── */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.85rem;
+            background: var(--surface);
+            border-radius: 99px;
+            box-shadow: var(--card-shadow);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-2);
+            white-space: nowrap;
+            transition: color 0.3s;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-3);
+            flex-shrink: 0;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        .status-dot.ok {
+            background: var(--emerald);
+            box-shadow: 0 0 0 3px var(--emerald-bg);
+        }
+
+        .status-dot.err { background: var(--red); }
+
+        /* ── Main grid ──────────────────────────────────────────────────── */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        @media (max-width: 760px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Card ───────────────────────────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border-radius: var(--r-lg);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        .card-body { padding: 1.5rem; }
+
+        .card + .card { margin-top: 1.25rem; }
+
+        /* ── Card header ────────────────────────────────────────────────── */
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            /* borde superior de acento que da personalidad a cada card */
+            border-top: 2px solid var(--sky-bd);
+        }
+
+        .card-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--sky);
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .card-badge {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-2);
+            background: var(--surface-2);
+            border: 1px solid var(--border-2);
+            border-radius: 99px;
+            padding: 0.2rem 0.65rem;
+        }
+
+        /* ── Upload zone ────────────────────────────────────────────────── */
+        #drop-zone {
+            border: 1.5px dashed var(--border-2);
+            border-radius: var(--r-md);
+            padding: 3.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        #drop-zone:hover,
+        #drop-zone.over {
+            border-color: var(--cyan);
+            background: var(--cyan-bg);
+        }
+
+        .upload-icon {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--surface-2) 0%, rgba(56,189,248,0.08) 100%);
+            border: 1px solid var(--sky-bd);
+            border-radius: var(--r-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+
+        .upload-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.01em;
+        }
+
+        .upload-sub {
+            font-size: 0.78rem;
+            color: var(--text-3);
+            line-height: 1.5;
+        }
+
+        .upload-sub span {
+            color: var(--cyan);
+            font-weight: 500;
+        }
+
+        #file-input { display: none; }
+
+        /* ── Preview ────────────────────────────────────────────────────── */
+        #preview-wrap {
+            display: none;
+            position: relative;
+            border-radius: var(--r-md);
+            overflow: hidden;
+            background: #000;
+            line-height: 0;
+        }
+
+        #preview-img {
+            width: 100%;
+            max-height: 340px;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* scan beam during analysis */
+        .scan-beam {
+            display: none;
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .scan-beam.active { display: block; }
+
+        .beam-line {
+            position: absolute;
+            left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, var(--cyan) 50%, transparent 100%);
+            box-shadow: 0 0 12px var(--cyan);
+            animation: sweep 1.8s ease-in-out infinite;
+        }
+
+        @keyframes sweep {
+            0%   { top: 0%;   opacity: 0; }
+            5%   { opacity: 1; }
+            95%  { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .upload-change-hint {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #fff;
+            gap: 0.4rem;
+        }
+
+        #preview-wrap:hover .upload-change-hint { opacity: 1; }
+
+        /* ── Buttons ────────────────────────────────────────────────────── */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem 1.25rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            border: none;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+
+        .btn:active:not(:disabled) { transform: scale(0.98); }
+
+        .btn-primary {
+            background: var(--sky);
+            color: #0d1526;
+            margin-top: 1rem;
+            font-weight: 700;
+            box-shadow: 0 0 0 1px rgba(56,189,248,0.4), 0 2px 8px rgba(56,189,248,0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #7dd3fc;
+            box-shadow: 0 0 0 1px rgba(56,189,248,0.5), 0 4px 14px rgba(56,189,248,0.3);
+        }
+
+        .btn-primary:disabled {
+            background: var(--surface-2);
+            color: var(--text-3);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-2);
+            border: 1px solid var(--border-2);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+        /* ── Loading ────────────────────────────────────────────────────── */
+        #loading-card { display: none; }
+
+        .loading-body {
+            display: flex;
+            align-items: center;
+            gap: 1.1rem;
+            padding: 1.5rem;
+        }
+
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border-2);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: -0.01em;
+        }
+
+        .loading-sub {
+            font-size: 0.75rem;
+            color: var(--text-3);
+            margin-top: 0.15rem;
+        }
+
+        /* ── Error ──────────────────────────────────────────────────────── */
+        #error-card { display: none; }
+
+        .error-body {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .error-icon-wrap {
+            width: 32px;
+            height: 32px;
+            background: var(--red-bg);
+            border: 1px solid var(--red-bd);
+            border-radius: var(--r-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--red);
+        }
+
+        .error-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+
+        #error-msg {
+            font-size: 0.78rem;
+            color: var(--text-2);
+            line-height: 1.5;
+        }
+
+        /* ── Result hero ────────────────────────────────────────────────── */
+        #results-card { display: none; }
+
+        .result-hero {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-3);
+            margin-bottom: 0.6rem;
+        }
+
+        .result-diagnosis {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-hero.normal    .result-diagnosis { color: var(--emerald); }
+        .result-hero.bacterial .result-diagnosis { color: var(--red); }
+        .result-hero.viral     .result-diagnosis { color: var(--amber); }
+
+        /* ── Confidence display ─────────────────────────────────────────── */
+        .confidence-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.4rem;
+        }
+
+        .confidence-number {
+            font-size: 2.6rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+        }
+
+        .result-hero.normal    .confidence-number { color: var(--emerald); }
+        .result-hero.bacterial .confidence-number { color: var(--red); }
+        .result-hero.viral     .confidence-number { color: var(--amber); }
+
+        .confidence-unit {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-3);
+        }
+
+        .confidence-desc {
+            font-size: 0.72rem;
+            color: var(--text-3);
+            margin-top: 0.25rem;
+        }
+
+        /* ── Stats row ──────────────────────────────────────────────────── */
+        .stats-strip {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat {
+            padding: 1rem 1.5rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .stat:last-child { border-right: none; }
+
+        .stat-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-3);
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        /* ── Prob bars ──────────────────────────────────────────────────── */
+        .prob-section {
+            padding: 1.25rem 1.5rem;
+        }
+
+        .prob-section-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-3);
+            margin-bottom: 1rem;
+        }
+
+        .prob-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .prob-row-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.4rem;
+        }
+
+        .prob-name {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .prob-pct {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .prob-track {
+            height: 4px;
+            background: var(--surface-2);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .prob-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+        }
+
+        .fill-normal    { background: var(--emerald); }
+        .fill-bacterial { background: var(--red); }
+        .fill-viral     { background: var(--amber); }
+
+        /* ── Verify notice ──────────────────────────────────────────────── */
+        .verify-strip {
+            display: none;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .verify-strip.correct   { background: var(--emerald-bg); }
+        .verify-strip.incorrect { background: var(--red-bg); }
+
+        .verify-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+
+        .verify-strip.correct   .verify-dot { background: var(--emerald); }
+        .verify-strip.incorrect .verify-dot { background: var(--red); }
+
+        .verify-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.1rem;
+        }
+
+        .verify-sub {
+            font-size: 0.73rem;
+            color: var(--text-2);
+        }
+
+        /* ── Model info ─────────────────────────────────────────────────── */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .meta-cell {
+            padding: 1rem 1.25rem;
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .meta-cell:nth-child(2n) { border-right: none; }
+        .meta-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+        .meta-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-3);
+            margin-bottom: 0.3rem;
+        }
+
+        .meta-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .meta-skeleton {
+            height: 0.85rem;
+            width: 70%;
+            background: var(--surface-2);
+            border-radius: 4px;
+            animation: shimmer 1.6s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.4; }
+            50%       { opacity: 0.8; }
+        }
+
+        /* ── About section ──────────────────────────────────────────────── */
+        .about-body {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .about-text {
+            font-size: 0.78rem;
+            color: var(--text-2);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .chip-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            border: 1px solid;
+        }
+
+        .chip-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .chip-normal    { color: var(--emerald); border-color: var(--emerald-bd); background: var(--emerald-bg); }
+        .chip-normal    .chip-dot { background: var(--emerald); }
+        .chip-bacterial { color: var(--red);     border-color: var(--red-bd);     background: var(--red-bg); }
+        .chip-bacterial .chip-dot { background: var(--red); }
+        .chip-viral     { color: var(--amber);   border-color: var(--amber-bd);   background: var(--amber-bg); }
+        .chip-viral     .chip-dot { background: var(--amber); }
+
+        /* ── Footer ─────────────────────────────────────────────────────── */
+        .footer {
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .footer-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.85rem;
+            background: var(--surface);
+            border-radius: var(--r-sm);
+            box-shadow: var(--card-shadow);
+            color: var(--text-2);
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .footer-link:hover { color: var(--text); }
+
+        .footer-copy {
+            font-size: 0.72rem;
+            color: var(--text-3);
+        }
+
+        /* ── Gallery ────────────────────────────────────────────────────── */
+        .gallery-section {
+            margin-top: 1.5rem;
+        }
+
+        .gallery-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border: none;
+            border-radius: var(--r-lg);
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            color: var(--text);
+            font-family: inherit;
+            transition: background 0.15s;
+        }
+
+        .gallery-toggle:hover { background: var(--surface-2); }
+
+        .gallery-toggle-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .gallery-toggle-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .gallery-toggle-sub {
+            font-size: 0.75rem;
+            color: var(--text-3);
+            margin-top: 1px;
+        }
+
+        .gallery-counts {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .gallery-count-badge {
+            font-size: 0.68rem;
+            font-weight: 500;
+            padding: 0.2rem 0.55rem;
+            border-radius: 99px;
+            border: 1px solid;
+        }
+
+        .gcb-normal    { color: var(--emerald); border-color: var(--emerald-bd); background: var(--emerald-bg); }
+        .gcb-bacterial { color: var(--red);     border-color: var(--red-bd);     background: var(--red-bg); }
+        .gcb-viral     { color: var(--amber);   border-color: var(--amber-bd);   background: var(--amber-bg); }
+
+        .gallery-chevron {
+            transition: transform 0.2s;
+            color: var(--text-3);
+            flex-shrink: 0;
+        }
+
+        .gallery-chevron.open { transform: rotate(180deg); }
+
+        .gallery-body {
+            display: none;
+            background: var(--surface);
+            border-radius: 0 0 var(--r-lg) var(--r-lg);
+            box-shadow: var(--card-shadow);
+            border-top: 1px solid var(--border);
+            margin-top: -4px;
+            overflow: hidden;
+        }
+
+        .gallery-body.open { display: block; }
+
+        /* Filter bar */
+        .gallery-filters {
+            display: flex;
+            gap: 0.4rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .gallery-filter-label {
+            font-size: 0.7rem;
+            color: var(--text-3);
+            font-weight: 500;
+            margin-right: 0.25rem;
+        }
+
+        .filter-btn {
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 500;
+            padding: 0.3rem 0.75rem;
+            border-radius: 99px;
+            border: 1px solid var(--border-2);
+            background: transparent;
+            color: var(--text-2);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+
+        .filter-btn:hover { color: var(--text); border-color: rgba(148,163,184,0.3); }
+
+        .filter-btn.active-all       { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
+        .filter-btn.active-normal    { background: var(--emerald-bg); color: var(--emerald); border-color: var(--emerald-bd); }
+        .filter-btn.active-bacterial { background: var(--red-bg);     color: var(--red);     border-color: var(--red-bd); }
+        .filter-btn.active-viral     { background: var(--amber-bg);   color: var(--amber);   border-color: var(--amber-bd); }
+
+        /* Image grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 3px;
+            padding: 1rem 1.5rem;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .gallery-grid::-webkit-scrollbar { width: 4px; }
+        .gallery-grid::-webkit-scrollbar-track { background: transparent; }
+        .gallery-grid::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+        .gallery-thumb {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: var(--r-sm);
+            overflow: hidden;
+            cursor: pointer;
+            background: #000;
+            border: 1.5px solid transparent;
+            transition: border-color 0.15s, transform 0.1s;
+        }
+
+        .gallery-thumb:hover {
+            border-color: var(--cyan);
+            transform: scale(1.03);
+            z-index: 1;
+        }
+
+        .gallery-thumb.cls-normal    { border-color: var(--emerald-bd); }
+        .gallery-thumb.cls-bacterial { border-color: var(--red-bd); }
+        .gallery-thumb.cls-viral     { border-color: var(--amber-bd); }
+
+        .gallery-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .gallery-thumb img.loaded { opacity: 1; }
+
+        .gallery-thumb .thumb-label {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.75));
+            padding: 0.5rem 0.3rem 0.2rem;
+            font-size: 0.52rem;
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .gallery-thumb:hover .thumb-label { opacity: 1; }
+
+        .gallery-loading {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-3);
+            font-size: 0.8rem;
+        }
+
+        .gallery-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-3);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- ── Header ── -->
+    <header class="header">
+        <div class="brand">
+            <div class="brand-mark">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+            </div>
+            <div>
+                <div class="brand-name">Pneumonia AI</div>
+                <div class="brand-desc">Diagnóstico radiológico asistido por CNN</div>
+            </div>
+        </div>
+
+        <div class="status-pill">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Conectando…</span>
+        </div>
+    </header>
+
+    <!-- ── Two-column grid ── -->
+    <div class="grid">
+
+        <!-- LEFT: upload + preview -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Radiografía de tórax</span>
+                    <span class="card-badge" id="file-badge">Sin archivo</span>
+                </div>
+                <div class="card-body">
+
+                    <!-- Drop zone -->
+                    <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+                        <div class="upload-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                        </div>
+                        <p class="upload-title">Arrastra la radiografía aquí</p>
+                        <p class="upload-sub">JPG, PNG · Máx. 10 MB · <span>Haz clic para seleccionar</span></p>
+                    </div>
+                    <input type="file" id="file-input" accept="image/jpeg,image/jpg,image/png">
+
+                    <!-- Preview (oculto hasta selección) -->
+                    <div id="preview-wrap" style="margin-top:1rem">
+                        <img id="preview-img" src="" alt="Radiografía">
+                        <div class="scan-beam" id="scan-beam">
+                            <div class="beam-line"></div>
+                        </div>
+                        <div class="upload-change-hint" onclick="document.getElementById('file-input').click()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Cambiar imagen
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="predict-btn" onclick="runPrediction()" style="display:none">
+                        Analizar radiografía
+                    </button>
+                    <button class="btn btn-secondary" id="reset-btn" onclick="reset()" style="display:none">
+                        Limpiar
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: model info + states + results -->
+        <div>
+
+            <!-- Model info -->
+            <div class="card" id="model-card">
+                <div class="card-header">
+                    <span class="card-title">Modelo</span>
+                </div>
+                <div class="meta-grid" id="info-grid">
+                    <div class="meta-cell"><div class="meta-label">Nombre</div><div class="meta-skeleton"></div></div>
+                    <div class="meta-cell"><div class="meta-label">Entrada</div><div class="meta-skeleton"></div></div>
+                    <div class="meta-cell"><div class="meta-label">Optimizador</div><div class="meta-skeleton"></div></div>
+                    <div class="meta-cell"><div class="meta-label">Cargado</div><div class="meta-skeleton"></div></div>
+                </div>
+                <div class="about-body">
+                    <p class="about-text">
+                        CNN entrenada con el dataset <strong style="color:var(--text)">Chest X-Ray Images (Pneumonia)</strong> para clasificar radiografías en tres categorías diagnósticas.
+                    </p>
+                    <div class="chip-row">
+                        <span class="chip chip-normal"><span class="chip-dot"></span>Normal</span>
+                        <span class="chip chip-bacterial"><span class="chip-dot"></span>Bacteriana</span>
+                        <span class="chip chip-viral"><span class="chip-dot"></span>Vírica</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="card" id="loading-card">
+                <div class="loading-body">
+                    <div class="spinner"></div>
+                    <div>
+                        <div class="loading-text">Analizando radiografía</div>
+                        <div class="loading-sub">Ejecutando inferencia CNN…</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error -->
+            <div class="card" id="error-card">
+                <div class="error-body">
+                    <div class="error-icon-wrap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="error-title">Error en el análisis</div>
+                        <div id="error-msg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card" id="results-card">
+
+                <!-- Diagnosis + confidence big number -->
+                <div class="result-hero" id="result-hero">
+                    <div class="result-label">Diagnóstico</div>
+                    <div class="result-diagnosis" id="result-diagnosis"></div>
+                    <div class="confidence-row">
+                        <span class="confidence-number" id="confidence-number"></span>
+                        <span class="confidence-unit">%</span>
+                    </div>
+                    <div class="confidence-desc">de confianza del modelo</div>
+                </div>
+
+                <!-- Latency + model stats -->
+                <div class="stats-strip">
+                    <div class="stat">
+                        <div class="stat-label">Latencia</div>
+                        <div class="stat-value" id="stat-latency">—</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Arquitectura</div>
+                        <div class="stat-value" id="stat-arch">CNN</div>
+                    </div>
+                </div>
+
+                <!-- Probability distribution -->
+                <div class="prob-section">
+                    <div class="prob-section-label">Distribución de probabilidades</div>
+                    <ul class="prob-list" id="prob-list"></ul>
+                </div>
+
+                <!-- Verify notice -->
+                <div class="verify-strip" id="verify-strip">
+                    <div class="verify-dot"></div>
+                    <div>
+                        <div class="verify-title" id="verify-title"></div>
+                        <div class="verify-sub" id="verify-sub"></div>
+                    </div>
+                </div>
+
+                <div style="padding:1rem 1.5rem;border-top:1px solid var(--border)">
+                    <button class="btn btn-secondary" onclick="reset()" style="margin-top:0">
+                        Analizar otra radiografía
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Gallery ── -->
+    <div class="gallery-section">
+
+        <button class="gallery-toggle" onclick="toggleGallery()" id="gallery-toggle">
+            <div class="gallery-toggle-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                </svg>
+                <div>
+                    <div class="gallery-toggle-title">Galería de imágenes de test</div>
+                    <div class="gallery-toggle-sub">Selecciona una radiografía del dataset para analizarla</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+                <div class="gallery-counts" id="gallery-counts" style="display:none">
+                    <span class="gallery-count-badge gcb-normal"   id="count-normal">—</span>
+                    <span class="gallery-count-badge gcb-bacterial" id="count-bacterial">—</span>
+                    <span class="gallery-count-badge gcb-viral"    id="count-viral">—</span>
+                </div>
+                <svg class="gallery-chevron" id="gallery-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+        </button>
+
+        <div class="gallery-body" id="gallery-body">
+            <div class="gallery-filters">
+                <span class="gallery-filter-label">Filtrar:</span>
+                <button class="filter-btn active-all" onclick="filterGallery('all',   this)">Todas</button>
+                <button class="filter-btn"            onclick="filterGallery('NORMAL',              this)">Normal</button>
+                <button class="filter-btn"            onclick="filterGallery('PNEUMONIA_BACTERIAL', this)">Bacteriana</button>
+                <button class="filter-btn"            onclick="filterGallery('PNEUMONIA_VIRAL',     this)">Vírica</button>
+            </div>
+            <div class="gallery-grid" id="gallery-grid">
+                <div class="gallery-loading">Cargando imágenes…</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Footer ── -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a class="footer-link" href="/docs" target="_blank">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                API Docs
+            </a>
+            <a class="footer-link" href="http://localhost:3000" target="_blank">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                Grafana
+            </a>
+            <a class="footer-link" href="http://localhost:9090" target="_blank">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Prometheus
+            </a>
+        </div>
+        <span class="footer-copy">Pneumonia CNN · Aplicaciones de IA II · Curso 25-26</span>
+    </footer>
+
+</div>
+
+<script>
+    const API_BASE = window.location.origin;
+
+    const CLASS_KEY = {
+        NORMAL:              'normal',
+        PNEUMONIA_BACTERIAL: 'bacterial',
+        PNEUMONIA_VIRAL:     'viral',
+    };
+
+    const CLASS_LABEL = {
+        NORMAL:              'Normal',
+        PNEUMONIA_BACTERIAL: 'Neumonía Bacteriana',
+        PNEUMONIA_VIRAL:     'Neumonía Vírica',
+    };
+
+    const CLASS_FILL = {
+        NORMAL:              'fill-normal',
+        PNEUMONIA_BACTERIAL: 'fill-bacterial',
+        PNEUMONIA_VIRAL:     'fill-viral',
+    };
+
+    let selectedFile = null;
+    let trueClass    = null;
+
+    // ── Health ──
+    async function checkHealth() {
+        try {
+            const res  = await fetch(`${API_BASE}/health`);
+            const data = await res.json();
+            const dot  = document.getElementById('status-dot');
+            const txt  = document.getElementById('status-text');
+            if (data.status === 'ok' && data.model_loaded) {
+                dot.className   = 'status-dot ok';
+                txt.textContent = 'Sistema operativo';
+            } else {
+                dot.className   = 'status-dot err';
+                txt.textContent = 'Modelo no disponible';
+            }
+        } catch {
+            document.getElementById('status-dot').className = 'status-dot err';
+            document.getElementById('status-text').textContent = 'Sin conexión';
+        }
+    }
+
+    // ── Model info ──
+    async function loadModelInfo() {
+        try {
+            const res  = await fetch(`${API_BASE}/info`);
+            const data = await res.json();
+
+            const loadedAt = data.load_timestamp
+                ? new Date(data.load_timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                : '—';
+
+            document.getElementById('stat-arch').textContent = data.model_name ?? 'CNN';
+
+            document.getElementById('info-grid').innerHTML = `
+                <div class="meta-cell"><div class="meta-label">Nombre</div><div class="meta-value">${data.model_name ?? '—'}</div></div>
+                <div class="meta-cell"><div class="meta-label">Entrada</div><div class="meta-value">${data.input_size ?? '—'}</div></div>
+                <div class="meta-cell"><div class="meta-label">Optimizador</div><div class="meta-value">${data.optimizer ?? '—'}</div></div>
+                <div class="meta-cell"><div class="meta-label">Cargado</div><div class="meta-value">${loadedAt}</div></div>
+            `;
+        } catch {
+            document.getElementById('info-grid').innerHTML =
+                '<div style="padding:1rem 1.25rem;font-size:0.78rem;color:var(--text-3);grid-column:1/-1">Sin metadatos disponibles.</div>';
+        }
+    }
+
+    checkHealth();
+    loadModelInfo();
+    setInterval(checkHealth, 30000);
+
+    // ── Drag & drop ──
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('over');
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+    });
+
+    document.getElementById('file-input').addEventListener('change', e => {
+        if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    function inferTrueClass(name) {
+        name = name.toLowerCase();
+        if (name.includes('bacteria')) return 'PNEUMONIA_BACTERIAL';
+        if (name.includes('virus'))    return 'PNEUMONIA_VIRAL';
+        if (name.includes('normal'))   return 'NORMAL';
+        if (/^im-\d/.test(name))       return 'NORMAL';
+        return null;
+    }
+
+    function handleFile(file) {
+        if (!file.type.match(/^image\/(jpeg|jpg|png)$/i)) {
+            showError('Formato no soportado. Usa JPG o PNG.');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            showError('El archivo supera el límite de 10 MB.');
+            return;
+        }
+
+        selectedFile = file;
+        trueClass    = inferTrueClass(file.name);
+
+        const shortName = file.name.length > 26 ? file.name.slice(0, 24) + '…' : file.name;
+        document.getElementById('file-badge').textContent = shortName;
+
+        const reader = new FileReader();
+        reader.onload = ev => {
+            document.getElementById('preview-img').src = ev.target.result;
+            show('preview-wrap');
+            show('predict-btn');
+            show('reset-btn');
+            hide('drop-zone');
+            hide('results-card');
+            hide('error-card');
+            stopScan();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── Scan animation ──
+    function startScan() { document.getElementById('scan-beam').classList.add('active'); }
+    function stopScan()  { document.getElementById('scan-beam').classList.remove('active'); }
+
+    // ── Predict ──
+    async function runPrediction() {
+        if (!selectedFile) return;
+
+        const btn = document.getElementById('predict-btn');
+        btn.disabled = true;
+        startScan();
+        hide('results-card');
+        hide('error-card');
+        show('loading-card');
+
+        const form = new FormData();
+        form.append('file', selectedFile);
+
+        try {
+            const res  = await fetch(`${API_BASE}/predict`, { method: 'POST', body: form });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || `Error ${res.status}`);
+            showResults(data);
+        } catch (err) {
+            showError(err.message || 'Error de conexión con la API.');
+        } finally {
+            hide('loading-card');
+            stopScan();
+            btn.disabled = false;
+        }
+    }
+
+    function showResults(data) {
+        const { prediction, label, confidence, inference_time_ms, probabilities } = data;
+        const key = CLASS_KEY[prediction] || 'normal';
+
+        // Hero
+        const hero = document.getElementById('result-hero');
+        hero.className = `result-hero ${key}`;
+        document.getElementById('result-diagnosis').textContent  = label || CLASS_LABEL[prediction] || prediction;
+        document.getElementById('confidence-number').textContent = (confidence * 100).toFixed(1);
+
+        // Stats
+        document.getElementById('stat-latency').textContent = `${inference_time_ms} ms`;
+
+        // Prob bars
+        const list = document.getElementById('prob-list');
+        list.innerHTML = '';
+        probabilities.forEach(item => {
+            const pct = (item.probability * 100).toFixed(1);
+            const li  = document.createElement('li');
+            li.innerHTML = `
+                <div class="prob-row-top">
+                    <span class="prob-name">${item.label || CLASS_LABEL[item.class] || item.class}</span>
+                    <span class="prob-pct">${pct}%</span>
+                </div>
+                <div class="prob-track">
+                    <div class="prob-fill ${CLASS_FILL[item.class] || 'fill-normal'}" style="width:0%"></div>
+                </div>
+            `;
+            list.appendChild(li);
+            requestAnimationFrame(() => {
+                li.querySelector('.prob-fill').style.width = `${pct}%`;
+            });
+        });
+
+        // Verify
+        const strip = document.getElementById('verify-strip');
+        if (trueClass) {
+            const ok = trueClass === prediction;
+            strip.className = `verify-strip ${ok ? 'correct' : 'incorrect'}`;
+            strip.style.display = 'flex';
+            document.getElementById('verify-title').textContent = ok ? 'Predicción correcta' : 'Predicción incorrecta';
+            document.getElementById('verify-sub').textContent   = ok
+                ? `Clasificado correctamente como ${CLASS_LABEL[trueClass]}.`
+                : `Clase real: ${CLASS_LABEL[trueClass]} · Predicho: ${CLASS_LABEL[prediction]}`;
+        } else {
+            strip.style.display = 'none';
+        }
+
+        show('results-card');
+    }
+
+    function showError(msg) {
+        document.getElementById('error-msg').textContent = msg;
+        show('error-card');
+    }
+
+    function reset() {
+        selectedFile = null;
+        trueClass    = null;
+        document.getElementById('file-input').value   = '';
+        document.getElementById('preview-img').src    = '';
+        document.getElementById('file-badge').textContent = 'Sin archivo';
+        document.getElementById('verify-strip').style.display = 'none';
+        stopScan();
+        show('drop-zone');
+        hide('preview-wrap');
+        hide('predict-btn');
+        hide('reset-btn');
+        hide('results-card');
+        hide('error-card');
+        hide('loading-card');
+    }
+
+    function show(id) { document.getElementById(id).style.display = 'block'; }
+    function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+    // ── Gallery ──────────────────────────────────────────────────────────
+    let galleryOpen   = false;
+    let galleryLoaded = false;
+    let allImages     = [];
+    let activeFilter  = 'all';
+
+    const CLASS_CLS = {
+        NORMAL:              'cls-normal',
+        PNEUMONIA_BACTERIAL: 'cls-bacterial',
+        PNEUMONIA_VIRAL:     'cls-viral',
+    };
+
+    function toggleGallery() {
+        galleryOpen = !galleryOpen;
+        const body    = document.getElementById('gallery-body');
+        const chevron = document.getElementById('gallery-chevron');
+        const toggle  = document.getElementById('gallery-toggle');
+        body.classList.toggle('open', galleryOpen);
+        chevron.classList.toggle('open', galleryOpen);
+        toggle.style.borderRadius = galleryOpen
+            ? 'var(--r-lg) var(--r-lg) 0 0'
+            : 'var(--r-lg)';
+
+        if (galleryOpen && !galleryLoaded) loadGallery();
+    }
+
+    async function loadGallery() {
+        try {
+            const res  = await fetch(`${API_BASE}/test-images`);
+            if (!res.ok) throw new Error('No disponible');
+            const data = await res.json();
+
+            allImages = data.images;
+
+            // Update count badges
+            const bc = data.by_class;
+            document.getElementById('count-normal').textContent    = `${bc.NORMAL ?? 0} Normal`;
+            document.getElementById('count-bacterial').textContent = `${bc.PNEUMONIA_BACTERIAL ?? 0} Bact.`;
+            document.getElementById('count-viral').textContent     = `${bc.PNEUMONIA_VIRAL ?? 0} Viral`;
+            document.getElementById('gallery-counts').style.display = 'flex';
+
+            galleryLoaded = true;
+            renderGallery('all');
+        } catch {
+            document.getElementById('gallery-grid').innerHTML =
+                '<div class="gallery-empty">Galería no disponible. Verifica que el stack está levantado con el volumen de test montado.</div>';
+        }
+    }
+
+    function filterGallery(cls, btn) {
+        activeFilter = cls;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.className = 'filter-btn';
+        });
+        const map = { all: 'active-all', NORMAL: 'active-normal', PNEUMONIA_BACTERIAL: 'active-bacterial', PNEUMONIA_VIRAL: 'active-viral' };
+        btn.classList.add(map[cls] || 'active-all');
+        if (galleryLoaded) renderGallery(cls);
+    }
+
+    function renderGallery(cls) {
+        const filtered = cls === 'all' ? allImages : allImages.filter(img => img.class === cls);
+        const grid     = document.getElementById('gallery-grid');
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="gallery-empty">No hay imágenes para este filtro.</div>';
+            return;
+        }
+
+        grid.innerHTML = '';
+        filtered.forEach(img => {
+            const div      = document.createElement('div');
+            div.className  = `gallery-thumb ${CLASS_CLS[img.class] || ''}`;
+            div.title      = `${img.label} · ${img.filename}`;
+            div.onclick    = () => loadFromGallery(img);
+
+            const image       = document.createElement('img');
+            image.loading     = 'lazy';
+            image.src         = img.url;
+            image.alt         = img.filename;
+            image.onload      = () => image.classList.add('loaded');
+
+            const label       = document.createElement('div');
+            label.className   = 'thumb-label';
+            label.textContent = img.filename;
+
+            div.appendChild(image);
+            div.appendChild(label);
+            grid.appendChild(div);
+        });
+    }
+
+    async function loadFromGallery(img) {
+        try {
+            const res  = await fetch(img.url);
+            const blob = await res.blob();
+            const file = new File([blob], img.filename, { type: blob.type || 'image/jpeg' });
+            handleFile(file);
+            // Scroll to top smoothly so the user sees the predictor
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch {
+            showError('No se pudo cargar la imagen de la galería.');
+        }
+    }
+</script>
+</body>
+</html>
