@@ -2,7 +2,7 @@
 
 Sistema de despliegue profesional de una CNN para clasificación de radiografías de tórax. Detecta tres clases diagnósticas: **Normal**, **Neumonía Bacteriana** y **Neumonía Vírica**.
 
-Proyecto de la asignatura **Aplicaciones de Inteligencia Artificial II** (Curso 24-25).
+Proyecto de la asignatura **Aplicaciones de Inteligencia Artificial II** (Curso 25-26).
 
 ---
 
@@ -332,7 +332,5 @@ Los tests cubren:
 ---
 
 ## Alumno
-
-**Rodrigo Gálvez Travalja**  
-Grupo: Víctor Teruel, Antonio Gallego, Francisco Javier Garrido, Javier Ramos  
-Aplicaciones de Inteligencia Artificial II · Curso 24-25
+**Rodrigo Gálvez Travalja**   
+Aplicaciones de Inteligencia Artificial II · Curso 25-26
