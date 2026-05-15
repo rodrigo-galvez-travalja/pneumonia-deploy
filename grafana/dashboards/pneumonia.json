@@ -16,7 +16,7 @@
     },
     {
       "id": 2, "type": "stat", "title": "Total Predicciones",
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -37,36 +37,9 @@
       }]
     },
     {
-      "id": 3, "type": "stat", "title": "Errores",
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "expr": "sum(prediction_errors_total) or vector(0)",
-        "legendFormat": "Errores", "refId": "A"
-      }]
-    },
-    {
       "id": 4, "type": "stat", "title": "Ritmo (pred/min)",
-      "description": "Predicciones procesadas por minuto en los últimos 2 min. 'Predicciones Activas' (gauge) no es observable con scrape de 15 s e inferencias de ~20 ms.",
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "description": "Predicciones procesadas por minuto en los últimos 2 min.",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -98,7 +71,7 @@
     },
     {
       "id": 5, "type": "stat", "title": "Estado API",
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -211,7 +184,7 @@
     },
     {
       "id": 11, "type": "stat", "title": "Latencia Media",
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 15 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -229,7 +202,7 @@
         "overrides": []
       },
       "options": {
-        "colorMode": "background", "graphMode": "none", "orientation": "auto",
+        "colorMode": "background", "graphMode": "area", "orientation": "auto",
         "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
         "textMode": "auto"
       },
@@ -237,36 +210,6 @@
         "datasource": { "type": "prometheus", "uid": "prometheus" },
         "expr": "rate(inference_latency_seconds_sum[5m]) / rate(inference_latency_seconds_count[5m]) * 1000",
         "legendFormat": "Media", "refId": "A"
-      }]
-    },
-    {
-      "id": 12, "type": "stat", "title": "Tasa de Errores",
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 19 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "unit": "percentunit",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.01 },
-              { "color": "red", "value": 0.05 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "background", "graphMode": "none", "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "expr": "rate(prediction_errors_total[5m]) / (rate(total_predictions_total[5m]) + rate(prediction_errors_total[5m]))",
-        "legendFormat": "% errores", "refId": "A"
       }]
     }
   ]
