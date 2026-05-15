@@ -195,7 +195,8 @@
       "collapsed": false
     },
     {
-      "id": 12, "type": "timeseries", "title": "Red por contenedor (bytes/s)",
+      "id": 12, "type": "timeseries", "title": "Red del host Docker — eth0 (bytes/s)",
+      "description": "En Docker Desktop (macOS) cAdvisor no expone network namespaces por contenedor. Se muestra el tráfico real de la interfaz eth0 del host Docker, que agrupa todo el tráfico de los contenedores.",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
@@ -209,13 +210,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "label_replace(rate(container_network_receive_bytes_total{id=~\"/docker/[a-f0-9]{64}\"}[2m]), \"container\", \"$1\", \"id\", \"/docker/([a-f0-9]{12}).*\")",
-          "legendFormat": "↓ {{container}}", "refId": "A"
+          "expr": "rate(container_network_receive_bytes_total{id=\"/\", interface=\"eth0\"}[2m])",
+          "legendFormat": "↓ Recibido (eth0)", "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "label_replace(rate(container_network_transmit_bytes_total{id=~\"/docker/[a-f0-9]{64}\"}[2m]), \"container\", \"$1\", \"id\", \"/docker/([a-f0-9]{12}).*\")",
-          "legendFormat": "↑ {{container}}", "refId": "B"
+          "expr": "rate(container_network_transmit_bytes_total{id=\"/\", interface=\"eth0\"}[2m])",
+          "legendFormat": "↑ Transmitido (eth0)", "refId": "B"
         }
       ]
     }
