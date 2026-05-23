@@ -112,7 +112,7 @@ pneuomnia-deploy/
 
 ## Instalación y ejecución
 
-### Levantar el sistema completo
+### Arranque estándar (Windows, macOS y Linux)
 
 ```bash
 git clone <url-del-repo>
@@ -120,7 +120,7 @@ cd pneuomnia-deploy
 docker-compose up --build
 ```
 
-Servicios disponibles tras el arranque:
+Levanta los servicios core del sistema:
 
 | Servicio | URL |
 |---|---|
@@ -128,6 +128,20 @@ Servicios disponibles tras el arranque:
 | Documentación API (Swagger) | http://localhost:8000/docs |
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3000 |
+
+### Arranque con métricas de infraestructura (solo Linux y macOS)
+
+Node Exporter y cAdvisor requieren acceso a rutas del kernel Linux (`/proc`, `/sys`) y no son compatibles con Windows. Para activarlos usa el perfil `infra`:
+
+```bash
+docker-compose up --build --profile infra
+```
+
+Esto añade:
+
+| Servicio | URL |
+|---|---|
+| Node Exporter | http://localhost:9100 |
 | cAdvisor | http://localhost:8081 |
 
 ### Credenciales Grafana

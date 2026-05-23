@@ -5,9 +5,12 @@ services:
       - "8000:8000"
     environment:
       - MODEL_PATH=models/model.pth
-      - TEST_IMAGES_PATH=/data/test
-    volumes:
-      - /Users/rodrigo/.cache/kagglehub/datasets/paultimothymooney/chest-xray-pneumonia/versions/2/chest_xray/test:/data/test:ro
+      # Galería de test (opcional): descarga el dataset de Kaggle y establece
+      # la variable de entorno TEST_IMAGES_PATH apuntando a la carpeta /test
+      # del dataset, luego monta el volumen correspondiente. Ejemplo:
+      #   TEST_IMAGES_PATH=/data/test
+      # y añade en volumes:
+      #   - /ruta/local/chest_xray/test:/data/test:ro
     restart: unless-stopped
 
   prometheus:
@@ -24,8 +27,13 @@ services:
       - api
     restart: unless-stopped
 
+  # Los servicios node-exporter y cadvisor montan rutas del kernel Linux
+  # (/proc, /sys, /var/run/docker.sock) y no funcionan en Windows.
+  # Se incluyen en el perfil "infra" para activarlos solo en Linux/macOS:
+  #   docker-compose up --build --profile infra
   node-exporter:
     image: prom/node-exporter:latest
+    profiles: ["infra"]
     ports:
       - "9100:9100"
     volumes:
@@ -41,6 +49,7 @@ services:
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
+    profiles: ["infra"]
     ports:
       - "8081:8080"
     volumes:

@@ -20,7 +20,15 @@ def _make_png(width: int = 100, height: int = 100) -> bytes:
 
 
 def test_root(client):
+    # GET / sirve el frontend (HTML), no JSON.
+    # El endpoint de info general en JSON está en GET /api.
     response = client.get("/")
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+
+
+def test_api_info(client):
+    response = client.get("/api")
     assert response.status_code == 200
     assert "name" in response.json()
 
