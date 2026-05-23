@@ -2,7 +2,7 @@
 
 Sistema de despliegue profesional de una CNN para clasificación de radiografías de tórax. Detecta tres clases diagnósticas: **Normal**, **Neumonía Bacteriana** y **Neumonía Vírica**.
 
-Proyecto de la asignatura **Aplicaciones de Inteligencia Artificial II** (Curso 25-26).
+Proyecto de la asignatura **Inteligencia Artificial II** (Curso 25-26).
 
 ---
 
