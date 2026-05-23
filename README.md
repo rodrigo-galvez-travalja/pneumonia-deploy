@@ -85,7 +85,7 @@ pneuomnia-deploy/
 ├── models/
 │   └── model.pth               # Pesos entrenados
 ├── training/
-│   └── L3P2-Pneumonia.ipynb    # Notebook de entrenamiento
+│   └── PneumoniaPrincipal.ipynb # Notebook de entrenamiento
 ├── prometheus/
 │   └── prometheus.yml          # Configuración scraping
 ├── grafana/
@@ -334,7 +334,7 @@ docker-compose up -d
 python -m pytest tests/ -v
 ```
 
-Estado actual: **13/13 tests pasando**.
+Estado actual: **14/14 tests pasando**.
 
 Los tests cubren:
 - `GET /health` — estado del servicio
